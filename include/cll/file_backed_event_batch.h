@@ -12,15 +12,14 @@ class FileBackedEventBatch : public EventBatch {
 private:
     std::string path;
     std::fstream stream;
+    size_t fileSize;
     std::mutex streamMutex;
     bool streamAtEnd = false;
     size_t count = 0;
     size_t maxSize = 0;
 
 public:
-    FileBackedEventBatch(std::string const& path) : path(path) {
-        stream.open(path, std::ios_base::in | std::ios_base::out | std::ios_base::app | std::ios_base::binary);
-    }
+    FileBackedEventBatch(std::string const& path);
 
     void setLimit(size_t count, size_t maxSize) {
         this->count = count;

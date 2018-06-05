@@ -4,7 +4,7 @@
 #include <vector>
 #include "event.h"
 #include "event_upload_request.h"
-#include "event_upload_source.h"
+#include "event_batch.h"
 
 namespace cll {
 
@@ -22,7 +22,7 @@ private:
     std::vector<std::unique_ptr<EventUploadStep>> steps;
 
 public:
-    void sendEvents(EventUploadSource* source);
+    void sendEvents(EventBatch* batch);
 
     void addStep(std::unique_ptr<EventUploadStep> step) {
         steps.push_back(std::move(step));
