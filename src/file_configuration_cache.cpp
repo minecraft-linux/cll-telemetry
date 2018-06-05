@@ -9,7 +9,11 @@ void FileConfigurationCache::load() {
     std::ifstream fs(path);
     if (!fs)
         return;
-    fs >> data;
+    try {
+        fs >> data;
+    } catch (std::exception& e) {
+        Log::warn("FileConfigurationCache", "Failed to read configuration cache: %s", e.what());
+    }
 }
 
 void FileConfigurationCache::store() {
@@ -29,6 +33,7 @@ bool FileConfigurationCache::readFromCache(std::string const& url, CachedConfigu
             std::chrono::milliseconds(en->value("expires", 0)));
     config.etag = en->value("etag", std::string());
     config.data = en->value("data", nlohmann::json::object());
+    return true;
 }
 
 void FileConfigurationCache::writeConfigToCache(std::string const& url, CachedConfiguration const& config) {
