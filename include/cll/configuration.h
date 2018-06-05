@@ -1,8 +1,11 @@
 #pragma once
 
 #include <nlohmann/json.hpp>
+#include <chrono>
 
 namespace cll {
+
+class ConfigurationCache;
 
 template <typename T>
 class ConfigurationProperty {
@@ -43,7 +46,7 @@ public:
     ConfigurationProperty<int> maxEventsPerPost;
     ConfigurationProperty<int> queueDrainInterval;
 
-    Configuration(std::string url) : url(std::move(url)) {}
+    explicit Configuration(std::string url) : url(std::move(url)) {}
 
     bool download();
 
@@ -52,7 +55,9 @@ public:
     }
 
 private:
-    void applyFromJson(nlohmann::json const& json);
+    bool applyFromJson(nlohmann::json const& json);
+
+    static nlohmann::json safeParseJson(std::string const& str);
 
 };
 
