@@ -29,7 +29,7 @@ size_t HttpRequest::curlHeaderHandler(char* buffer, size_t size, size_t nitems, 
     char* ptr = (char*) memchr(buffer, ':', size * nitems);
     if (ptr != nullptr) {
         size_t iof = ptr - buffer;
-        data->headers.emplace_back(std::string(buffer, iof), std::string(&buffer[iof + 1], size * nitems - iof - 1));
+        data->headers.emplace_back(std::string(buffer, iof), std::string(&buffer[iof + 2], size * nitems - iof - 2 - 2));
     }
     return nitems * size;
 }

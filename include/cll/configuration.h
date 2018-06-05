@@ -57,7 +57,7 @@ public:
     }
 
 private:
-    bool applyFromJson(nlohmann::json const& json);
+    void applyFromJson(nlohmann::json const& json);
 
     static nlohmann::json safeParseJson(std::string const& str);
 

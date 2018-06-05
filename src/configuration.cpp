@@ -17,13 +17,10 @@ void ConfigurationProperty<int>::set(nlohmann::json const& json, std::string con
         set(JsonUtils::asInt(*f));
 }
 
-bool Configuration::applyFromJson(nlohmann::json const& json) {
-    if (!json.is_object())
-        return false;
+void Configuration::applyFromJson(nlohmann::json const& json) {
     maxEventSizeInBytes.set(json, "MAXEVENTSIZEINBYTES");
     maxEventsPerPost.set(json, "MAXEVENTSPERPOST");
     queueDrainInterval.set(json, "QUEUEDRAININTERVAL");
-    return true;
 }
 
 bool Configuration::download(ConfigurationCache* cache) {
@@ -56,8 +53,7 @@ bool Configuration::download(ConfigurationCache* cache) {
         cached.expires = requestStart + std::chrono::minutes(JsonUtils::asInt(val["refreshInterval"]));
         cached.data = settings;
         cached.etag = response.findHeader("ETag");
-        if (!applyFromJson(settings))
-            return false;
+        applyFromJson(settings);
         expires = cached.expires;
         downloaded = true;
         if (cache)
@@ -67,8 +63,10 @@ bool Configuration::download(ConfigurationCache* cache) {
         expires = cached.expires;
         downloaded = true;
 
-        return applyFromJson(cached.data["settings"]);
+        applyFromJson(cached.data["settings"]);
+        return true;
     }
+    Log::warn("Configuration", "Failed to download configuration: status code %li", response.status);
     return false;
 }
 
