@@ -6,7 +6,8 @@
 
 using namespace cll;
 
-void Configuration::applyJsonProperty(nlohmann::json const& json, std::string const& name, int& value) {
+template <>
+void ConfigurationProperty<int>::set(nlohmann::json const& json, std::string const& name) {
     auto f = json.find(name);
     if (f == json.end())
         return;
@@ -14,17 +15,17 @@ void Configuration::applyJsonProperty(nlohmann::json const& json, std::string co
         value = f->get<int>();
     else
         value = std::stoi(f->get<std::string>());
-    Log::trace("Configuration", "Overriding %s to %i", name.c_str(), value);
 }
 
 void Configuration::applyFromJson(nlohmann::json const& json) {
-    applyJsonProperty(json, "MAXEVENTSIZEINBYTES", maxEventSizeInBytes);
-    applyJsonProperty(json, "MAXEVENTSPERPOST", maxEventsPerPost);
-    applyJsonProperty(json, "QUEUEDRAININTERVAL", queueDrainInterval);
+    maxEventSizeInBytes.set(json, "MAXEVENTSIZEINBYTES");
+    maxEventsPerPost.set(json, "MAXEVENTSPERPOST");
+    queueDrainInterval.set(json, "QUEUEDRAININTERVAL");
 }
 
-bool Configuration::downloadConfigFromUrl(std::string const& url) {
+bool Configuration::download() {
     CURL* curl = curl_easy_init();
+    Log::trace("Configuration", "Downloading configuration from: %s", url.c_str());
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     std::stringstream output;
     CurlHelper::setupStreamOutput(curl, output);
@@ -35,17 +36,10 @@ bool Configuration::downloadConfigFromUrl(std::string const& url) {
     try {
         auto val = nlohmann::json::parse(output.str());
         applyFromJson(val.value("settings", nlohmann::json::object()));
+        downloaded = true;
         return true;
     } catch (nlohmann::json::parse_error& e) {
         Log::error("Configuration", "Failed to download configuration: invalid json: %s", e.what());
         return false;
     }
-}
-
-bool Configuration::downloadDefaultConfig(std::string const& iKey) {
-    // NOTE: the current Android client also sends extra params that include the OS name and version as well as device
-    // id. It doesn't seem that they affect anything, so I am skipping that part.
-    bool ret = downloadConfigFromUrl("https://settings.data.microsoft.com/settings/v2.0/androidLL/app");
-    downloadConfigFromUrl("https://settings.data.microsoft.com/settings/v2.0/telemetry/" + iKey);
-    return ret;
 }

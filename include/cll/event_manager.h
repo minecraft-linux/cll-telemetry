@@ -2,7 +2,7 @@
 
 #include "event.h"
 #include "event_uploader.h"
-#include "configuration.h"
+#include "configuration_manager.h"
 
 namespace cll {
 
@@ -10,17 +10,17 @@ class EventManager {
 
 private:
     std::string iKey;
-    Configuration serverConfig;
+    ConfigurationManager config;
     EventUploader uploader;
 
 public:
-    EventManager(std::string iKey) : iKey(std::move(iKey)) {}
+    EventManager(std::string const& iKey);
 
     inline std::string const& getIKey() const { return iKey; }
 
     inline EventUploader& getUploader() { return uploader; }
 
-    inline Configuration& getConfiguration() { return serverConfig; }
+    inline ConfigurationManager& getConfigurationManager() { return config; }
 
 
     void add(Event event);
