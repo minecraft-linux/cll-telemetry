@@ -11,14 +11,16 @@ private:
     int maxEventsPerPost = 500;
     int queueDrainInterval = 120;
 
+    static void applyJsonProperty(nlohmann::json const& json, std::string const& name, int& value);
+
 public:
     Configuration() {}
 
-    void applyFromJson(nlohmann::json const& json) {
-        maxEventSizeInBytes = json.value("MAXEVENTSIZEINBYTES", maxEventSizeInBytes);
-        maxEventsPerPost = json.value("MAXEVENTSPERPOST", maxEventsPerPost);
-        queueDrainInterval = json.value("QUEUEDRAININTERVAL", queueDrainInterval);
-    }
+    void applyFromJson(nlohmann::json const& json);
+
+    bool downloadConfigFromUrl(std::string const& url);
+
+    bool downloadDefaultConfig(std::string const& iKey);
 
     int getMaxEventSizeInBytes() const {
         return maxEventSizeInBytes;
