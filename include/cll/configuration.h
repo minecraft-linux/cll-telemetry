@@ -42,16 +42,18 @@ class Configuration {
 public:
     std::string const url;
     bool downloaded = false;
+    std::chrono::system_clock::time_point expires;
     ConfigurationProperty<int> maxEventSizeInBytes;
     ConfigurationProperty<int> maxEventsPerPost;
     ConfigurationProperty<int> queueDrainInterval;
 
     explicit Configuration(std::string url) : url(std::move(url)) {}
 
-    bool download();
+    bool download(ConfigurationCache* cache);
 
     bool needsRedownload() const {
-        return !downloaded;
+        return !downloaded ||
+                std::chrono::system_clock::now() >= expires;
     }
 
 private:

@@ -2,12 +2,14 @@
 
 #include <memory>
 #include "configuration.h"
+#include "configuration_cache.h"
 
 namespace cll {
 
 class ConfigurationManager {
 
 private:
+    std::unique_ptr<ConfigurationCache> cache;
     std::vector<std::unique_ptr<Configuration>> configurations;
 
 public:
@@ -57,7 +59,7 @@ public:
     void downloadConfigs() {
         for (auto const& config : configurations) {
             if (config->needsRedownload())
-                config->download();
+                config->download(cache.get());
         }
     }
 

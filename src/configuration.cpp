@@ -1,6 +1,7 @@
 #include <cll/configuration.h>
 
 #include <log.h>
+#include <cll/configuration_cache.h>
 #include "http/http_request.h"
 #include "json_utils.h"
 #include "http/curl_error.h"
@@ -25,13 +26,21 @@ bool Configuration::applyFromJson(nlohmann::json const& json) {
     return true;
 }
 
-bool Configuration::download() {
+bool Configuration::download(ConfigurationCache* cache) {
     Log::trace("Configuration", "Downloading configuration from: %s", url.c_str());
 
     auto requestStart = std::chrono::system_clock::now();
 
     HttpRequest request;
     request.setUrl(url);
+
+    CachedConfiguration cached;
+    bool hasCached = false;
+    if (cache)
+        hasCached = cache->readFromCache(url, cached);
+
+    if (hasCached)
+        request.addHeader("If-None-Match", "\"" + cached.etag + "\"");
 
     HttpResponse response;
     try {
@@ -44,11 +53,20 @@ bool Configuration::download() {
         nlohmann::json val = safeParseJson(response.body);
 
         auto settings = val["settings"];
+        cached.expires = requestStart + std::chrono::minutes(JsonUtils::asInt(val["refreshInterval"]));
+        cached.data = settings;
+        cached.etag = response.findHeader("ETag");
         if (!applyFromJson(settings))
             return false;
+        expires = cached.expires;
         downloaded = true;
+        if (cache)
+            cache->writeConfigToCache(url, cached);
         return true;
     } else if (response.status == 304) { // cached
+        expires = cached.expires;
+        downloaded = true;
+
         nlohmann::json val = safeParseJson(response.body);
         return applyFromJson(val["settings"]);
     }
