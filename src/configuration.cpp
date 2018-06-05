@@ -67,8 +67,7 @@ bool Configuration::download(ConfigurationCache* cache) {
         expires = cached.expires;
         downloaded = true;
 
-        nlohmann::json val = safeParseJson(response.body);
-        return applyFromJson(val["settings"]);
+        return applyFromJson(cached.data["settings"]);
     }
     return false;
 }

@@ -13,6 +13,10 @@ private:
     std::vector<std::unique_ptr<Configuration>> configurations;
 
 public:
+    void setCache(std::unique_ptr<ConfigurationCache> cache) {
+        this->cache = std::move(cache);
+    }
+
     void add(std::unique_ptr<Configuration> configuration) {
         configurations.push_back(std::move(configuration));
     }
