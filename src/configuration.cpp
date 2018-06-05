@@ -35,6 +35,10 @@ bool Configuration::download(ConfigurationCache* cache) {
     bool hasCached = false;
     if (cache)
         hasCached = cache->readFromCache(url, cached);
+    if (hasCached && std::chrono::system_clock::now() < cached.expires) {
+        importCached(cached);
+        return true;
+    }
 
     if (hasCached)
         request.addHeader("If-None-Match", "\"" + cached.etag + "\"");
@@ -60,14 +64,18 @@ bool Configuration::download(ConfigurationCache* cache) {
             cache->writeConfigToCache(url, cached);
         return true;
     } else if (response.status == 304) { // cached
-        expires = cached.expires;
-        downloaded = true;
-
-        applyFromJson(cached.data["settings"]);
+        importCached(cached);
         return true;
     }
     Log::warn("Configuration", "Failed to download configuration: status code %li", response.status);
     return false;
+}
+
+void Configuration::importCached(CachedConfiguration const& cached) {
+    expires = cached.expires;
+    downloaded = true;
+
+    applyFromJson(cached.data);
 }
 
 nlohmann::json Configuration::safeParseJson(std::string const& str) {

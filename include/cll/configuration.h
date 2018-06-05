@@ -6,6 +6,7 @@
 namespace cll {
 
 class ConfigurationCache;
+class CachedConfiguration;
 
 template <typename T>
 class ConfigurationProperty {
@@ -58,6 +59,8 @@ public:
 
 private:
     void applyFromJson(nlohmann::json const& json);
+
+    void importCached(CachedConfiguration const& cached);
 
     static nlohmann::json safeParseJson(std::string const& str);
 

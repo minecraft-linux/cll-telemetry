@@ -30,7 +30,7 @@ bool FileConfigurationCache::readFromCache(std::string const& url, CachedConfigu
     if (en == data.end())
         return false;
     config.expires = std::chrono::time_point<std::chrono::system_clock>(
-            std::chrono::milliseconds(en->value("expires", 0)));
+            std::chrono::milliseconds(en->value("expires", 0LL)));
     config.etag = en->value("etag", std::string());
     config.data = en->value("data", nlohmann::json::object());
     return true;
