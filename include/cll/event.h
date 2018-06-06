@@ -18,19 +18,19 @@ public:
     Event(std::string name, nlohmann::json data, std::vector<std::string> ids = {}) :
             name(std::move(name)), data(std::move(data)), ids(std::move(ids)), time(std::chrono::system_clock::now()) {}
 
-    std::string const& get_name() const {
+    std::string const& getName() const {
         return name;
     }
 
-    nlohmann::json const& get_data() const {
+    nlohmann::json const& getData() const {
         return data;
     }
 
-    std::vector<std::string> const& get_ids() const {
+    std::vector<std::string> const& getIds() const {
         return ids;
     }
 
-    std::chrono::system_clock::time_point get_time() const {
+    std::chrono::system_clock::time_point getTime() const {
         return time;
     }
 
