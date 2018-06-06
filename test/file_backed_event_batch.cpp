@@ -26,6 +26,24 @@ protected:
 };
 const int FileBackedEventBatchWithDataTest::TEST_EVENT_COUNT;
 
+static std::vector<std::string> getMessagesInEventList(std::vector<char> const& val) {
+    char const* ptr = val.data();
+    std::vector<std::string> list;
+    while (true) {
+        char const* e = (char const*) memchr(ptr, '\n', val.size() - (ptr - val.data()));
+        if (e == nullptr) {
+            if (ptr != val.data() + val.size())
+                throw std::runtime_error("getMessagesInEventList: Has extra data after message");
+            break;
+        }
+        if (*e != '\n' || *(e - 1) != '\r')
+            throw std::runtime_error("getMessagesInEventList: Doesn't end with \\r\\n");
+        list.push_back(std::string(ptr, e - ptr - 1));
+        ptr = e + 1;
+    }
+    return list;
+}
+
 TEST_F(FileBackedEventBatchTest, BasicTest) {
     // Add event
     nlohmann::json event = {{"test", "This is a test log entry"}};
@@ -48,6 +66,22 @@ TEST_F(FileBackedEventBatchTest, BasicTest) {
     ASSERT_FALSE(access(batch.getPath().c_str(), F_OK) == 0);
 }
 
+TEST(FileBackedEventBatchCustomTest, PersistenceTest) {
+    nlohmann::json event = {{"test", "This is a test log entry"}};
+    auto eventStr = event.dump();
+    {
+        FileBackedEventBatch batch("test_data");
+        ASSERT_TRUE(batch.addEvent(event));
+    }
+    {
+        FileBackedEventBatch batch("test_data");
+        auto upEv = getMessagesInEventList(batch.getEventsForUpload(10, 512));
+        ASSERT_EQ(upEv.size(), 1);
+        ASSERT_EQ(upEv[0], eventStr);
+    }
+    remove("test_data");
+}
+
 TEST_F(FileBackedEventBatchTest, NoAddingEventsToFinalized) {
     batch.setFinalized();
     ASSERT_FALSE(batch.addEvent(nlohmann::json::object()));
@@ -62,24 +96,6 @@ void FileBackedEventBatchWithDataTest::SetUp() {
 
 nlohmann::json FileBackedEventBatchWithDataTest::GetJsonFor(int eventIndex) {
     return {{"test", "This is a test log entry #" + std::to_string(eventIndex)}};
-}
-
-static std::vector<std::string> getMessagesInEventList(std::vector<char> const& val) {
-    char const* ptr = val.data();
-    std::vector<std::string> list;
-    while (true) {
-        char const* e = (char const*) memchr(ptr, '\n', val.size() - (ptr - val.data()));
-        if (e == nullptr) {
-            if (ptr != val.data() + val.size())
-                throw std::runtime_error("getMessagesInEventList: Has extra data after message");
-            break;
-        }
-        if (*e != '\n' || *(e - 1) != '\r')
-            throw std::runtime_error("getMessagesInEventList: Doesn't end with \\r\\n");
-        list.push_back(std::string(ptr, e - ptr - 1));
-        ptr = e + 1;
-    }
-    return list;
 }
 
 TEST_F(FileBackedEventBatchWithDataTest, ReadIncremental) {
