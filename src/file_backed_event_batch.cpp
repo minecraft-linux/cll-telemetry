@@ -19,6 +19,7 @@ bool FileBackedEventBatch::addEvent(nlohmann::json const& rawData) {
     }
     stream << rawData << "\r\n";
     fileSize = (size_t) stream.tellg();
+    return true;
 }
 
 std::vector<char> FileBackedEventBatch::getEventsForUpload(size_t maxCount, size_t maxSize) {
@@ -61,6 +62,8 @@ void FileBackedEventBatch::onEventsUploaded(size_t byteCount) {
         return;
     }
     std::ifstream streamIn (path, std::ios_base::in | std::ios_base::binary);
+    if (!streamIn)
+        throw std::runtime_error("Failed to open input stream for onEventsUploaded");
     streamIn.seekg(byteCount);
     stream.seekg(0, std::ios_base::beg);
     const int bufSize = 1024 * 1024;
@@ -71,7 +74,9 @@ void FileBackedEventBatch::onEventsUploaded(size_t byteCount) {
         stream.write(buf, streamIn.gcount());
     }
     delete[] buf;
+    streamIn.clear();
+    auto pos = streamIn.tellg();
     streamIn.close();
-    truncate64(path.c_str(), streamIn.tellg());
-    fileSize = (size_t) streamIn.tellg();
+    truncate64(path.c_str(), pos);
+    fileSize = (size_t) pos;
 }
