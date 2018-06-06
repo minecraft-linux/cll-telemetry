@@ -13,6 +13,8 @@ public:
 
     virtual void onEventsUploaded(size_t byteCount) = 0;
 
+    virtual bool hasEvents() const = 0;
+
 };
 
 }

@@ -1,5 +1,6 @@
 #include <cll/file_backed_event_batch.h>
 #include <unistd.h>
+#include <log.h>
 
 using namespace cll;
 
@@ -12,6 +13,10 @@ FileBackedEventBatch::FileBackedEventBatch(std::string const& path) : path(path)
 
 bool FileBackedEventBatch::addEvent(nlohmann::json const& rawData) {
     std::lock_guard<std::mutex> lock (streamMutex);
+    if (finalized) {
+        Log::warn("FileBackedEventBatch", "Trying to add an event to a finalized EventBatch");
+        return false;
+    }
     stream.clear();
     if (!streamAtEnd) {
         stream.seekg(0, std::ios_base::end);
@@ -24,6 +29,8 @@ bool FileBackedEventBatch::addEvent(nlohmann::json const& rawData) {
 
 std::vector<char> FileBackedEventBatch::getEventsForUpload(size_t maxCount, size_t maxSize) {
     std::lock_guard<std::mutex> lock (streamMutex);
+    if (fileSize == 0) // The file is empty. This is needed to avoid read attempts in case we deleted the file.
+        return std::vector<char>();
     stream.clear();
     if (streamAtEnd) {
         stream.seekg(0, std::ios_base::beg);
@@ -58,7 +65,9 @@ void FileBackedEventBatch::onEventsUploaded(size_t byteCount) {
     std::lock_guard<std::mutex> lock (streamMutex);
     stream.clear();
     if (fileSize == byteCount) {
-        truncate(path.c_str(), 0);
+        stream.close();
+        fileSize = 0;
+        remove(path.c_str());
         return;
     }
     std::ifstream streamIn (path, std::ios_base::in | std::ios_base::binary);
