@@ -32,10 +32,8 @@ std::vector<char> FileBackedEventBatch::getEventsForUpload(size_t maxCount, size
     if (fileSize == 0) // The file is empty. This is needed to avoid read attempts in case we deleted the file.
         return std::vector<char>();
     stream.clear();
-    if (streamAtEnd) {
-        stream.seekg(0, std::ios_base::beg);
-        streamAtEnd = false;
-    }
+    stream.seekg(0, std::ios_base::beg);
+    streamAtEnd = false;
     if (maxSize > 1024 * 1024)
         maxSize = 1024 * 1024;
     if (maxSize > fileSize)
@@ -43,6 +41,7 @@ std::vector<char> FileBackedEventBatch::getEventsForUpload(size_t maxCount, size
     std::vector<char> data;
     data.resize(maxSize);
     auto data_ptr = data.data();
+    stream.clear();
     if (!stream.read(data_ptr, maxSize))
         return std::vector<char>(); // error
     size_t n = (size_t) stream.gcount();
