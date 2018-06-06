@@ -94,5 +94,22 @@ TEST_F(FileBackedEventBatchWithDataTest, ReadIncremental) {
         }
     }
 }
+TEST_F(FileBackedEventBatchWithDataTest, ReadIncrementalWithRemoval) {
+    size_t maxCount = 1;
+    size_t gotEvents = 0;
+    while (gotEvents < TEST_EVENT_COUNT) {
+        auto val = batch.getEventsForUpload(maxCount, TEST_EVENT_COUNT * maxCount);
+        ASSERT_GT(val.size(), 0) << "Got count: " << gotEvents << "; Max count: " << maxCount;
+        for (std::string msg : getMessagesInEventList(val)) {
+            nlohmann::json expected = GetJsonFor((int) gotEvents);
+            printf("Read: %s\n", msg.c_str());
+            ASSERT_EQ(expected.dump(), msg);
+            gotEvents++;
+            ASSERT_LE(gotEvents, TEST_EVENT_COUNT);
+        }
+        batch.onEventsUploaded(val.size());
+        maxCount++;
+    }
+}
 
 }
