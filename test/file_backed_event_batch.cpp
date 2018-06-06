@@ -5,8 +5,28 @@ using namespace cll;
 
 namespace {
 
-TEST(FileBackedEventBatchTest, BasicTest) {
-    FileBackedEventBatch batch ("test1_data");
+class FileBackedEventBatchTest : public ::testing::Test {
+protected:
+    FileBackedEventBatch batch;
+
+    FileBackedEventBatchTest() : batch("test_data") {
+    }
+
+    ~FileBackedEventBatchTest() {
+        remove(batch.getPath().c_str());
+    }
+};
+class FileBackedEventBatchWithDataTest : public FileBackedEventBatchTest {
+protected:
+    static const int TEST_EVENT_COUNT = 128;
+
+    nlohmann::json GetJsonFor(int eventIndex);
+
+    void SetUp() override;
+};
+const int FileBackedEventBatchWithDataTest::TEST_EVENT_COUNT;
+
+TEST_F(FileBackedEventBatchTest, BasicTest) {
     // Add event
     nlohmann::json event = {{"test", "This is a test log entry"}};
     ASSERT_FALSE(batch.hasEvents());
@@ -26,6 +46,53 @@ TEST(FileBackedEventBatchTest, BasicTest) {
     ASSERT_EQ(upEv.size(), 0);
     // Make sure the file no longer exists (it was finalized, and all events should be removed)
     ASSERT_FALSE(access(batch.getPath().c_str(), F_OK) == 0);
+}
+
+TEST_F(FileBackedEventBatchTest, NoAddingEventsToFinalized) {
+    batch.setFinalized();
+    ASSERT_FALSE(batch.addEvent(nlohmann::json::object()));
+}
+
+void FileBackedEventBatchWithDataTest::SetUp() {
+    for (int i = 0; i < TEST_EVENT_COUNT; i++) {
+        nlohmann::json event = GetJsonFor(i);
+        ASSERT_TRUE(batch.addEvent(event));
+    }
+}
+
+nlohmann::json FileBackedEventBatchWithDataTest::GetJsonFor(int eventIndex) {
+    return {{"test", "This is a test log entry #" + std::to_string(eventIndex)}};
+}
+
+static std::vector<std::string> getMessagesInEventList(std::vector<char> const& val) {
+    char const* ptr = val.data();
+    std::vector<std::string> list;
+    while (true) {
+        char const* e = (char const*) memchr(ptr, '\n', val.size() - (ptr - val.data()));
+        if (e == nullptr) {
+            if (ptr != val.data() + val.size())
+                throw std::runtime_error("getMessagesInEventList: Has extra data after message");
+            break;
+        }
+        if (*e != '\n' || *(e - 1) != '\r')
+            throw std::runtime_error("getMessagesInEventList: Doesn't end with \\r\\n");
+        list.push_back(std::string(ptr, e - ptr - 1));
+        ptr = e + 1;
+    }
+    return list;
+}
+
+TEST_F(FileBackedEventBatchWithDataTest, ReadIncremental) {
+    for (size_t i = 1; i < TEST_EVENT_COUNT; i++) {
+        auto val = batch.getEventsForUpload(i, i * 128);
+        ASSERT_GT(val.size(), 0) << "Iteration: " << i;
+        auto evs = getMessagesInEventList(val);
+        ASSERT_EQ(evs.size(), i);
+        for (size_t j = 0; j < i; j++) {
+            nlohmann::json expected = GetJsonFor(j);
+            ASSERT_EQ(expected.dump(), evs[j]);
+        }
+    }
 }
 
 }
