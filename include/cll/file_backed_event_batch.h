@@ -2,7 +2,6 @@
 
 #include "event_batch.h"
 
-#include <fstream>
 #include <mutex>
 
 namespace cll {
@@ -11,16 +10,20 @@ class FileBackedEventBatch : public EventBatch {
 
 private:
     std::string path;
-    std::fstream stream;
-    size_t fileSize;
+    int fd;
+    size_t fileSize = 0;
     std::mutex streamMutex;
     bool streamAtEnd = false;
     bool finalized = false;
     size_t count = 0;
     size_t maxSize = 0;
 
+    void seekToEndAndGetFileSize();
+
 public:
     FileBackedEventBatch(std::string const& path);
+
+    ~FileBackedEventBatch();
 
     inline std::string const& getPath() const { return path; }
 
