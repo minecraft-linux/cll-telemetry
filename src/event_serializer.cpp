@@ -2,6 +2,7 @@
 #include <cll/event.h>
 #include <random>
 #include <sys/utsname.h>
+#include "event_serializer_extensions.h"
 
 using namespace cll;
 
@@ -15,6 +16,8 @@ EventSerializer::EventSerializer() {
         os = osInfo.sysname;
         osVer = osInfo.release;
     }
+
+    addExtension(std::unique_ptr<Extension>(new OsInfoExtension()));
 }
 
 std::string EventSerializer::getEventTimeAsString(std::chrono::system_clock::time_point timepoint) {
@@ -48,5 +51,10 @@ nlohmann::json EventSerializer::createEnvelopeFor(Event const& ev) {
         envelope["appId"] = appId;
     if (!appVer.empty())
         envelope["appVer"] = appVer;
+    if (!extensions.empty()) {
+        auto& ext = envelope["ext"] = nlohmann::json::object();
+        for (auto const& e : extensions)
+            ext[e->getName()] = e->build(ev);
+    }
     return envelope;
 }
