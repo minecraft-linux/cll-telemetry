@@ -23,7 +23,7 @@ private:
 
     std::string iKey;
     long long epoch;
-    unsigned long long seqNum;
+    unsigned long long seqNum = 0;
     std::string os;
     std::string osVer;
     std::string appId;
@@ -57,6 +57,17 @@ public:
     void setApp(std::string appId, std::string appVer) {
         this->appId = std::move(appId);
         this->appVer = std::move(appVer);
+    }
+
+    /**
+     * Sets the OS name and version, which will be included in the envelope. You probably will not need to call it, as
+     * the constructor sets it based on the system uname.
+     * @param os the OS name (e.g. Android)
+     * @param appVer the OS version
+     */
+    void setOsInfo(std::string os, std::string osVer) {
+        this->os = std::move(os);
+        this->osVer = std::move(osVer);
     }
 
     /**

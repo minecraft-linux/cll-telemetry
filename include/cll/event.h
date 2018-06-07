@@ -19,17 +19,20 @@ inline EventFlags operator |(EventFlags a, EventFlags b) {
 
 class Event {
 
+public:
+    using Time = std::chrono::system_clock::time_point;
+
 private:
     const std::string name;
     const nlohmann::json data;
     const EventFlags flags;
     const std::vector<std::string> ids;
-    const std::chrono::system_clock::time_point time;
+    const Time time;
 
 public:
-    Event(std::string name, nlohmann::json data, EventFlags flags, std::vector<std::string> ids = {}) :
-            name(std::move(name)), data(std::move(data)), flags(flags), ids(std::move(ids)),
-            time(std::chrono::system_clock::now()) {}
+    Event(std::string name, nlohmann::json data, EventFlags flags, std::vector<std::string> ids = {},
+          Time time = std::chrono::system_clock::now()) :
+            name(std::move(name)), data(std::move(data)), flags(flags), ids(std::move(ids)), time(time) {}
 
     std::string const& getName() const {
         return name;
