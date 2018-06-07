@@ -118,7 +118,6 @@ TEST_F(FileBackedEventBatchWithDataTest, ReadIncrementalWithRemoval) {
         ASSERT_GT(val.size(), 0) << "Got count: " << gotEvents << "; Max count: " << maxCount;
         for (std::string msg : getMessagesInEventList(val)) {
             nlohmann::json expected = GetJsonFor((int) gotEvents);
-            printf("Read: %s\n", msg.c_str());
             ASSERT_EQ(expected.dump(), msg);
             gotEvents++;
             ASSERT_LE(gotEvents, TEST_EVENT_COUNT);
