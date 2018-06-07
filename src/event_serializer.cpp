@@ -2,7 +2,6 @@
 #include <cll/event.h>
 #include <random>
 #include <sys/utsname.h>
-#include "event_serializer_extensions.h"
 
 using namespace cll;
 
@@ -16,8 +15,6 @@ EventSerializer::EventSerializer() {
         os = osInfo.sysname;
         osVer = osInfo.release;
     }
-
-    addExtension(std::unique_ptr<Extension>(new OsInfoExtension()));
 }
 
 std::string EventSerializer::getEventTimeAsString(std::chrono::system_clock::time_point timepoint) {

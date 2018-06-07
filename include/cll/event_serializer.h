@@ -59,6 +59,15 @@ public:
         this->appVer = std::move(appVer);
     }
 
+    /**
+     * This functions sets an epoch attached with events. You probably will not need to call it, as the constructor sets
+     * a random epoch already.
+     * @param epoch the session id
+     */
+    void setEpoch(long long epoch) {
+        this->epoch = epoch;
+    }
+
 
     /**
      * Builds the envelope for the specified event.
