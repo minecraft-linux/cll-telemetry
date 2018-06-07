@@ -15,13 +15,14 @@ bool MemoryEventBatch::hasEvents() const {
     return !items.empty();
 }
 
-std::vector<char> MemoryEventBatch::getEventsForUpload(size_t maxCount, size_t maxSize) {
+std::unique_ptr<BatchedEventList> MemoryEventBatch::getEventsForUpload(size_t maxCount, size_t maxSize) {
     std::lock_guard<std::mutex> lock (mutex);
+    if (maxCount == 0 || maxSize == 0 || items.empty())
+        return nullptr;
     std::vector<char> ret;
     size_t s = 0;
+    size_t count = 0;
     for (auto const& i : items) {
-        if (maxCount-- == 0)
-            break;
         std::string itm = i.dump();
         size_t ns = s + itm.size() + 2;
         if (ns > maxSize)
@@ -31,11 +32,13 @@ std::vector<char> MemoryEventBatch::getEventsForUpload(size_t maxCount, size_t m
         ret[ns - 2] = '\r';
         ret[ns - 1] = '\n';
         s = ns;
+        if (++count == maxSize)
+            break;
     }
-    return ret;
+    return std::unique_ptr<BatchedEventList>(new EventList(ret, count));
 }
 
-void MemoryEventBatch::onEventsUploaded(size_t byteCount) {
+void MemoryEventBatch::onEventsUploaded(BatchedEventList& events) {
     std::lock_guard<std::mutex> lock (mutex);
-    // TODO:
+    items.erase(items.begin(), items.begin() + ((EventList&) events).events);
 }

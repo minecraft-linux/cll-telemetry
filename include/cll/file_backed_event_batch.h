@@ -40,9 +40,9 @@ public:
 
     bool addEvent(nlohmann::json const& rawData) override;
 
-    std::vector<char> getEventsForUpload(size_t maxCount, size_t maxSize) override;
+    std::unique_ptr<BatchedEventList> getEventsForUpload(size_t maxCount, size_t maxSize) override;
 
-    void onEventsUploaded(size_t byteCount) override;
+    void onEventsUploaded(BatchedEventList& events) override;
 
     bool hasEvents() const override {
         return fileSize != 0;

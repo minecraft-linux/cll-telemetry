@@ -53,10 +53,10 @@ bool FileBackedEventBatch::addEvent(nlohmann::json const& rawData) {
     return true;
 }
 
-std::vector<char> FileBackedEventBatch::getEventsForUpload(size_t maxCount, size_t maxSize) {
+std::unique_ptr<BatchedEventList> FileBackedEventBatch::getEventsForUpload(size_t maxCount, size_t maxSize) {
     std::lock_guard<std::mutex> lock (streamMutex);
     if (fd < 0 || fileSize == 0)
-        return std::vector<char>();
+        return nullptr;
     lseek(fd, 0, SEEK_SET);
     streamAtEnd = false;
     if (maxSize > 1024 * 1024)
@@ -84,14 +84,14 @@ std::vector<char> FileBackedEventBatch::getEventsForUpload(size_t maxCount, size
     }
     n = data_ptr - data.data();
     data.resize(n);
-    return data;
+    return std::unique_ptr<BatchedEventList>(new VectorBatchedEventList(std::move(data)));
 }
 
-void FileBackedEventBatch::onEventsUploaded(size_t byteCount) {
+void FileBackedEventBatch::onEventsUploaded(BatchedEventList& events) {
     std::lock_guard<std::mutex> lock (streamMutex);
     if (fd < 0)
         return;
-    if (fileSize == byteCount) {
+    if (fileSize == events.getDataSize()) {
         fileSize = 0;
         close(fd);
         fd = -1;
@@ -101,7 +101,7 @@ void FileBackedEventBatch::onEventsUploaded(size_t byteCount) {
     int fdIn = open(path.c_str(), O_RDONLY);
     if (fdIn < 0)
         throw std::runtime_error("Failed to open input stream for onEventsUploaded");
-    lseek64(fdIn, byteCount, SEEK_SET);
+    lseek64(fdIn, events.getDataSize(), SEEK_SET);
     lseek64(fd, 0, SEEK_SET);
     const int bufSize = 1024 * 1024;
     char* buf = new char[bufSize];

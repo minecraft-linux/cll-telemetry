@@ -26,13 +26,15 @@ protected:
 };
 const int FileBackedEventBatchWithDataTest::TEST_EVENT_COUNT;
 
-static std::vector<std::string> getMessagesInEventList(std::vector<char> const& val) {
-    char const* ptr = val.data();
+static std::vector<std::string> getMessagesInEventList(BatchedEventList* val) {
+    char const* ptr = val->getData();
     std::vector<std::string> list;
+    if (val == nullptr)
+        return list;
     while (true) {
-        char const* e = (char const*) memchr(ptr, '\n', val.size() - (ptr - val.data()));
+        char const* e = (char const*) memchr(ptr, '\n', val->getDataSize() - (ptr - val->getData()));
         if (e == nullptr) {
-            if (ptr != val.data() + val.size())
+            if (ptr != val->getData() + val->getDataSize())
                 throw std::runtime_error("getMessagesInEventList: Has extra data after message");
             break;
         }
@@ -54,14 +56,15 @@ TEST_F(FileBackedEventBatchTest, BasicTest) {
     ASSERT_TRUE(batch.hasEvents());
     // Get the event back
     auto upEv = batch.getEventsForUpload(1, 128); // this should return event + "\r\n"
-    ASSERT_EQ(upEv.size(), eventStr.size() + 2);
-    ASSERT_TRUE(memcmp(eventStr.data(), upEv.data(), eventStr.size()) == 0);
-    ASSERT_TRUE(memcmp(&upEv[eventStr.size()], "\r\n", 2) == 0);
+    ASSERT_NE(upEv, nullptr);
+    ASSERT_EQ(upEv->getDataSize(), eventStr.size() + 2);
+    ASSERT_TRUE(memcmp(eventStr.data(), upEv->getData(), eventStr.size()) == 0);
+    ASSERT_TRUE(memcmp(&upEv->getData()[eventStr.size()], "\r\n", 2) == 0);
     // Check simple (full) deletion behaviour
-    batch.onEventsUploaded(upEv.size());
+    batch.onEventsUploaded(*upEv);
     ASSERT_FALSE(batch.hasEvents());
     upEv = batch.getEventsForUpload(1, 128);
-    ASSERT_EQ(upEv.size(), 0);
+    ASSERT_TRUE(upEv == nullptr || upEv->getDataSize() == 0);
     // Make sure the file no longer exists (it was finalized, and all events should be removed)
     ASSERT_FALSE(access(batch.getPath().c_str(), F_OK) == 0);
 }
@@ -75,7 +78,7 @@ TEST(FileBackedEventBatchCustomTest, PersistenceTest) {
     }
     {
         FileBackedEventBatch batch("test_data");
-        auto upEv = getMessagesInEventList(batch.getEventsForUpload(10, 512));
+        auto upEv = getMessagesInEventList(batch.getEventsForUpload(10, 512).get());
         ASSERT_EQ(upEv.size(), 1);
         ASSERT_EQ(upEv[0], eventStr);
     }
@@ -101,8 +104,8 @@ nlohmann::json FileBackedEventBatchWithDataTest::GetJsonFor(int eventIndex) {
 TEST_F(FileBackedEventBatchWithDataTest, ReadIncremental) {
     for (size_t i = 1; i < TEST_EVENT_COUNT; i++) {
         auto val = batch.getEventsForUpload(i, i * 128);
-        ASSERT_GT(val.size(), 0) << "Iteration: " << i;
-        auto evs = getMessagesInEventList(val);
+        ASSERT_GT(val->getDataSize(), 0) << "Iteration: " << i;
+        auto evs = getMessagesInEventList(val.get());
         ASSERT_EQ(evs.size(), i);
         for (size_t j = 0; j < i; j++) {
             nlohmann::json expected = GetJsonFor(j);
@@ -115,14 +118,14 @@ TEST_F(FileBackedEventBatchWithDataTest, ReadIncrementalWithRemoval) {
     size_t gotEvents = 0;
     while (gotEvents < TEST_EVENT_COUNT) {
         auto val = batch.getEventsForUpload(maxCount, TEST_EVENT_COUNT * maxCount);
-        ASSERT_GT(val.size(), 0) << "Got count: " << gotEvents << "; Max count: " << maxCount;
-        for (std::string msg : getMessagesInEventList(val)) {
+        ASSERT_GT(val->getDataSize(), 0) << "Got count: " << gotEvents << "; Max count: " << maxCount;
+        for (std::string msg : getMessagesInEventList(val.get())) {
             nlohmann::json expected = GetJsonFor((int) gotEvents);
             ASSERT_EQ(expected.dump(), msg);
             gotEvents++;
             ASSERT_LE(gotEvents, TEST_EVENT_COUNT);
         }
-        batch.onEventsUploaded(val.size());
+        batch.onEventsUploaded(*val);
         maxCount++;
     }
 }
