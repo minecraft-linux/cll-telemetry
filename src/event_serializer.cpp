@@ -39,7 +39,7 @@ nlohmann::json EventSerializer::createEnvelopeFor(Event const& ev) {
     envelope["epoch"] = std::to_string(epoch);
     envelope["seqNum"] = seqNum++;
     envelope["iKey"] = iKey;
-    envelope["flags"] = iKey;
+    envelope["flags"] = ev.getFlags();
     if (!os.empty())
         envelope["os"] = os;
     if (!osVer.empty())

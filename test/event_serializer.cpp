@@ -10,7 +10,7 @@ TEST(EventSerializerTest, BasicTest) {
     serializer.setApp("my-app", "1.0.0");
     serializer.setEpoch(12345678L);
 
-    Event testEvent ("Event Name", {{"some", "data"}});
+    Event testEvent ("Event Name", {{"some", "data"}}, EventFlags::LatencyRealtime | EventFlags::PersistenceCritical);
 
     nlohmann::json json = serializer.createEnvelopeFor(testEvent);
     printf("%s\n", json.dump().c_str());
