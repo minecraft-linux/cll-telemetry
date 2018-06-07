@@ -33,19 +33,38 @@ private:
 public:
     EventSerializer();
 
+    /**
+     * Adds an extension, which will be added to each envelope in 'ext'.
+     * @param extension the extension object
+     */
     void addExtension(std::unique_ptr<Extension> extension) {
         extensions.push_back(std::move(extension));
     }
 
+    /**
+     * Sets the iKey parameter, which will be included in the envelope.
+     * @param iKey the instrumentation key
+     */
     void setIKey(std::string iKey) {
         this->iKey = std::move(iKey);
     }
 
+    /**
+     * Sets the application id and version, which will be included in the envelope.
+     * @param appId application id in the format of 'T:name', eg. 'A:com.package.name' for an Android app
+     * @param appVer the application version string
+     */
     void setApp(std::string appId, std::string appVer) {
         this->appId = std::move(appId);
         this->appVer = std::move(appVer);
     }
 
+
+    /**
+     * Builds the envelope for the specified event.
+     * @param ev the event to serialize
+     * @return the serialized event
+     */
     nlohmann::json createEnvelopeFor(Event const& ev);
 
 };

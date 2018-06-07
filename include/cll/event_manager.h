@@ -14,6 +14,10 @@ private:
     EventUploader uploader;
 
 public:
+    /**
+     * Creates the Event Manager with the specified application-specific instrumentation key.
+     * @param iKey the instrumentation key
+     */
     EventManager(std::string const& iKey);
 
     inline std::string const& getIKey() const { return iKey; }
