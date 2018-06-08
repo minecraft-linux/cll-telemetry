@@ -59,6 +59,10 @@ public:
         return fileSize != 0;
     }
 
+    size_t getEventCount() const {
+        return eventCount;
+    }
+
 
 };
 

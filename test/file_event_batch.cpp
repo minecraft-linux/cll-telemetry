@@ -19,10 +19,19 @@ protected:
 };
 
 TEST_F(FileEventBatchTest, BasicTest) {
+    EXPECT_EQ(batch.getEventCount(), 0);
     EventBatchTest::BasicTest(batch);
+    EXPECT_EQ(batch.getEventCount(), 0); // the basic test deletes the item
 }
 
-TEST(FileBackedEventBatchCustomTest, PersistenceTest) {
+TEST_F(FileEventBatchTest, BasicItemCountTest) {
+    nlohmann::json event = {{"test", "This is a test log entry"}};
+    for (int i = 0; i < 3; i++)
+        batch.addEvent(event);
+    ASSERT_EQ(batch.getEventCount(), 3);
+}
+
+TEST(FileEventBatchCustomTest, PersistenceTest) {
     nlohmann::json event = {{"test", "This is a test log entry"}};
     auto eventStr = event.dump();
     {
@@ -31,6 +40,7 @@ TEST(FileBackedEventBatchCustomTest, PersistenceTest) {
     }
     {
         FileEventBatch batch("test_data");
+        ASSERT_EQ(batch.getEventCount(), 1);
         auto upEv = EventBatchTest::GetMessagesInEventList(batch.getEventsForUpload(10, 512).get());
         ASSERT_EQ(upEv.size(), 1);
         ASSERT_EQ(upEv[0], eventStr);
