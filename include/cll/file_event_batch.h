@@ -21,6 +21,10 @@ private:
 
     void seekToEndAndGetFileSize();
 
+    inline bool canAddEventInt(size_t eventSize) {
+        return (maxSize == 0 || fileSize + eventSize <= maxSize) && (maxCount == 0 || eventCount + 1 <= maxCount);
+    }
+
 public:
     FileEventBatch(std::string const& path);
 

@@ -26,10 +26,10 @@ void FileEventBatch::seekToEndAndGetFileSize() {
 }
 
 bool FileEventBatch::canAddEvent(size_t eventSize) {
+    std::lock_guard<std::mutex> lock (streamMutex);
     if (finalized)
         return false;
-    std::lock_guard<std::mutex> lock (streamMutex);
-    return (maxSize == 0 || fileSize + eventSize <= maxSize) && (maxCount == 0 || eventCount + 1 <= maxCount);
+    return canAddEventInt(eventSize);
 }
 
 bool FileEventBatch::addEvent(std::string const& data) {
@@ -40,7 +40,7 @@ bool FileEventBatch::addEvent(std::string const& data) {
         Log::warn("FileEventBatch", "Trying to add an event to a finalized EventBatch");
         return false;
     }
-    if (!canAddEvent(data.length()))
+    if (!canAddEventInt(data.length()))
         return false;
     if (!streamAtEnd)
         seekToEndAndGetFileSize();
