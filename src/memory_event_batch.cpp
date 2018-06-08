@@ -32,7 +32,7 @@ std::unique_ptr<BatchedEventList> MemoryEventBatch::getEventsForUpload(size_t ma
         ret[ns - 2] = '\r';
         ret[ns - 1] = '\n';
         s = ns;
-        if (++count == maxSize)
+        if (++count == maxCount)
             break;
     }
     return std::unique_ptr<BatchedEventList>(new EventList(ret, count));
