@@ -11,7 +11,8 @@ class MemoryEventBatch : public EventBatch {
 private:
     struct EventList : public VectorBatchedEventList {
         size_t events;
-        EventList(std::vector<char> data, size_t events) : VectorBatchedEventList(std::move(data)), events(events) {}
+        EventList(std::vector<char> data, size_t events, bool hasMoreEvents) :
+                VectorBatchedEventList(std::move(data), hasMoreEvents), events(events) {}
     };
 
     mutable std::mutex mutex;

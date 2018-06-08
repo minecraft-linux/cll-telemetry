@@ -84,7 +84,7 @@ std::unique_ptr<BatchedEventList> FileBackedEventBatch::getEventsForUpload(size_
     }
     n = data_ptr - data.data();
     data.resize(n);
-    return std::unique_ptr<BatchedEventList>(new VectorBatchedEventList(std::move(data)));
+    return std::unique_ptr<BatchedEventList>(new VectorBatchedEventList(std::move(data), n < fileSize));
 }
 
 void FileBackedEventBatch::onEventsUploaded(BatchedEventList& events) {

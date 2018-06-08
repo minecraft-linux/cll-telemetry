@@ -35,7 +35,7 @@ std::unique_ptr<BatchedEventList> MemoryEventBatch::getEventsForUpload(size_t ma
         if (++count == maxCount)
             break;
     }
-    return std::unique_ptr<BatchedEventList>(new EventList(ret, count));
+    return std::unique_ptr<BatchedEventList>(new EventList(ret, count, count < items.size()));
 }
 
 void MemoryEventBatch::onEventsUploaded(BatchedEventList& events) {

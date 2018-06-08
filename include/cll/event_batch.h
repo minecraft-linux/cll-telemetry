@@ -9,6 +9,7 @@ class BatchedEventList {
 public:
     virtual const char* getData() const = 0;
     virtual size_t getDataSize() const = 0;
+    virtual bool hasMoreEvents() const = 0;
 
 };
 
@@ -30,9 +31,11 @@ class VectorBatchedEventList : public BatchedEventList {
 
 private:
     std::vector<char> data;
+    bool moreEvents;
 
 public:
-    explicit VectorBatchedEventList(std::vector<char> data) : data(std::move(data)) {}
+    explicit VectorBatchedEventList(std::vector<char> data, bool hasMoreEvents) : data(std::move(data)),
+                                                                                  moreEvents(hasMoreEvents) {}
 
     const char* getData() const override {
         return data.data();
@@ -40,6 +43,10 @@ public:
 
     size_t getDataSize() const override {
         return data.size();
+    }
+
+    bool hasMoreEvents() const override {
+        return moreEvents;
     }
 
 };
