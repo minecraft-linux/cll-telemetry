@@ -9,12 +9,6 @@ namespace cll {
 class MemoryEventBatch : public EventBatch {
 
 private:
-    struct EventList : public VectorBatchedEventList {
-        size_t events;
-        EventList(std::vector<char> data, size_t events, bool hasMoreEvents) :
-                VectorBatchedEventList(std::move(data), hasMoreEvents), events(events) {}
-    };
-
     mutable std::mutex mutex;
     std::vector<nlohmann::json> items;
     const size_t limit;

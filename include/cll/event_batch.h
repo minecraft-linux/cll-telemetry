@@ -51,4 +51,19 @@ public:
 
 };
 
+struct CountedVectorBatchedEventList : public VectorBatchedEventList {
+
+private:
+    size_t events;
+
+public:
+    CountedVectorBatchedEventList(std::vector<char> data, size_t events, bool hasMoreEvents) :
+            VectorBatchedEventList(std::move(data), hasMoreEvents), events(events) {}
+
+    size_t getEvents() const {
+        return events;
+    }
+
+};
+
 }

@@ -35,12 +35,12 @@ std::unique_ptr<BatchedEventList> MemoryEventBatch::getEventsForUpload(size_t ma
         if (++count == maxCount)
             break;
     }
-    return std::unique_ptr<BatchedEventList>(new EventList(ret, count, count < items.size()));
+    return std::unique_ptr<BatchedEventList>(new CountedVectorBatchedEventList(ret, count, count < items.size()));
 }
 
 void MemoryEventBatch::onEventsUploaded(BatchedEventList& events) {
     std::lock_guard<std::mutex> lock (mutex);
-    items.erase(items.begin(), items.begin() + ((EventList&) events).events);
+    items.erase(items.begin(), items.begin() + ((CountedVectorBatchedEventList&) events).getEvents());
 }
 
 std::vector<nlohmann::json> MemoryEventBatch::transferAllEvents() {

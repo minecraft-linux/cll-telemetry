@@ -96,7 +96,7 @@ bool FileEventBatch::addEvent(nlohmann::json const& rawData) {
 
 std::unique_ptr<BatchedEventList> FileEventBatch::getEventsForUpload(size_t maxCount, size_t maxSize) {
     std::lock_guard<std::mutex> lock (streamMutex);
-    if (fd < 0 || fileSize == 0)
+    if (fd < 0 || fileSize == 0 || maxCount == 0)
         return nullptr;
     lseek(fd, 0, SEEK_SET);
     streamAtEnd = false;
@@ -108,6 +108,7 @@ std::unique_ptr<BatchedEventList> FileEventBatch::getEventsForUpload(size_t maxC
     data.resize(maxSize);
     // read as much as we can
     size_t n = 0;
+    size_t events = 0;
     ssize_t m;
     while ((m = read(fd, &data.data()[n], maxSize - n)) > 0)
         n += m;
@@ -120,12 +121,12 @@ std::unique_ptr<BatchedEventList> FileEventBatch::getEventsForUpload(size_t maxC
         n_data_ptr++;
 
         data_ptr = n_data_ptr;
-        if (--maxCount == 0)
+        if (++events == maxCount)
             break;
     }
     n = data_ptr - data.data();
     data.resize(n);
-    return std::unique_ptr<BatchedEventList>(new VectorBatchedEventList(std::move(data), n < fileSize));
+    return std::unique_ptr<BatchedEventList>(new CountedVectorBatchedEventList(std::move(data), events, n < fileSize));
 }
 
 void FileEventBatch::onEventsUploaded(BatchedEventList& events) {
@@ -134,6 +135,7 @@ void FileEventBatch::onEventsUploaded(BatchedEventList& events) {
         return;
     if (fileSize == events.getDataSize()) {
         fileSize = 0;
+        eventCount = 0;
         close(fd);
         fd = -1;
         remove(path.c_str());
@@ -163,4 +165,5 @@ void FileEventBatch::onEventsUploaded(BatchedEventList& events) {
     close(fdIn);
     ftruncate64(fd, n);
     fileSize = n;
+    eventCount -= ((CountedVectorBatchedEventList&) events).getEvents();
 }
