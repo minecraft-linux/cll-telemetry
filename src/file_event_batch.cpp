@@ -38,10 +38,10 @@ void FileEventBatch::countEventsInFile() {
     size_t o = 0;
     while ((n = read(fd, buf, sizeof(buf))) > 0) {
         char* ptr = buf;
-        while ((ptr = (char*) memchr(ptr, '\n', sizeof(buf) - (ptr - buf))) != nullptr) {
+        while ((ptr = (char*) memchr(ptr, '\n', n - (ptr - buf))) != nullptr) {
+            ptr++;
             lastNewline = o + (ptr - buf);
             eventCount++;
-            ptr++;
         }
         o += n;
     }
