@@ -12,10 +12,11 @@ private:
     std::string path;
     int fd;
     size_t fileSize = 0;
+    size_t eventCount = 0; // TODO: determine this for loaded files
     std::mutex streamMutex;
     bool streamAtEnd = false;
     bool finalized = false;
-    size_t count = 0;
+    size_t maxCount = 0;
     size_t maxSize = 0;
 
     void seekToEndAndGetFileSize();
@@ -27,9 +28,9 @@ public:
 
     inline std::string const& getPath() const { return path; }
 
-    void setLimit(size_t count, size_t maxSize) {
+    void setLimit(size_t maxCount, size_t maxSize) {
         std::lock_guard<std::mutex> lock (streamMutex);
-        this->count = count;
+        this->maxCount = maxCount;
         this->maxSize = maxSize;
     }
 
@@ -37,6 +38,10 @@ public:
         std::lock_guard<std::mutex> lock (streamMutex);
         finalized = true;
     }
+
+    bool canAddEvent(size_t eventSize);
+
+    bool addEvent(std::string const& data);
 
     bool addEvent(nlohmann::json const& rawData) override;
 

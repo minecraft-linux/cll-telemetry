@@ -25,7 +25,14 @@ void FileEventBatch::seekToEndAndGetFileSize() {
     fileSize = (size_t) tg;
 }
 
-bool FileEventBatch::addEvent(nlohmann::json const& rawData) {
+bool FileEventBatch::canAddEvent(size_t eventSize) {
+    if (finalized)
+        return false;
+    std::lock_guard<std::mutex> lock (streamMutex);
+    return (maxSize == 0 || fileSize + eventSize <= maxSize) && (maxCount == 0 || eventCount + 1 <= maxCount);
+}
+
+bool FileEventBatch::addEvent(std::string const& data) {
     std::lock_guard<std::mutex> lock (streamMutex);
     if (fd < 0)
         return false;
@@ -33,9 +40,10 @@ bool FileEventBatch::addEvent(nlohmann::json const& rawData) {
         Log::warn("FileEventBatch", "Trying to add an event to a finalized EventBatch");
         return false;
     }
+    if (!canAddEvent(data.length()))
+        return false;
     if (!streamAtEnd)
         seekToEndAndGetFileSize();
-    std::string data = rawData.dump() + "\r\n";
     size_t o = 0;
     while (o < data.size()) {
         ssize_t ret = write(fd, &data[o], data.size() - o);
@@ -51,6 +59,10 @@ bool FileEventBatch::addEvent(nlohmann::json const& rawData) {
     }
     fileSize += o; // Let's assume the event got written correctly
     return true;
+}
+
+bool FileEventBatch::addEvent(nlohmann::json const& rawData) {
+    return addEvent(rawData.dump() + "\r\n");
 }
 
 std::unique_ptr<BatchedEventList> FileEventBatch::getEventsForUpload(size_t maxCount, size_t maxSize) {
