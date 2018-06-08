@@ -6,7 +6,7 @@
 
 namespace cll {
 
-class FileBackedEventBatch : public EventBatch {
+class FileEventBatch : public EventBatch {
 
 private:
     std::string path;
@@ -21,9 +21,9 @@ private:
     void seekToEndAndGetFileSize();
 
 public:
-    FileBackedEventBatch(std::string const& path);
+    FileEventBatch(std::string const& path);
 
-    ~FileBackedEventBatch();
+    ~FileEventBatch();
 
     inline std::string const& getPath() const { return path; }
 

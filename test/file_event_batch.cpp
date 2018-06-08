@@ -1,22 +1,22 @@
 #include <gtest/gtest.h>
-#include <cll/file_backed_event_batch.h>
+#include <cll/file_event_batch.h>
 
 using namespace cll;
 
 namespace {
 
-class FileBackedEventBatchTest : public ::testing::Test {
+class FileEventBatchTest : public ::testing::Test {
 protected:
-    FileBackedEventBatch batch;
+    FileEventBatch batch;
 
-    FileBackedEventBatchTest() : batch("test_data") {
+    FileEventBatchTest() : batch("test_data") {
     }
 
-    ~FileBackedEventBatchTest() {
+    ~FileEventBatchTest() {
         remove(batch.getPath().c_str());
     }
 };
-class FileBackedEventBatchWithDataTest : public FileBackedEventBatchTest {
+class FileEventBatchWithDataTest : public FileEventBatchTest {
 protected:
     static const int TEST_EVENT_COUNT = 128;
 
@@ -24,7 +24,7 @@ protected:
 
     void SetUp() override;
 };
-const int FileBackedEventBatchWithDataTest::TEST_EVENT_COUNT;
+const int FileEventBatchWithDataTest::TEST_EVENT_COUNT;
 
 static std::vector<std::string> getMessagesInEventList(BatchedEventList* val) {
     char const* ptr = val->getData();
@@ -46,7 +46,7 @@ static std::vector<std::string> getMessagesInEventList(BatchedEventList* val) {
     return list;
 }
 
-TEST_F(FileBackedEventBatchTest, BasicTest) {
+TEST_F(FileEventBatchTest, BasicTest) {
     // Add event
     nlohmann::json event = {{"test", "This is a test log entry"}};
     ASSERT_FALSE(batch.hasEvents());
@@ -73,11 +73,11 @@ TEST(FileBackedEventBatchCustomTest, PersistenceTest) {
     nlohmann::json event = {{"test", "This is a test log entry"}};
     auto eventStr = event.dump();
     {
-        FileBackedEventBatch batch("test_data");
+        FileEventBatch batch("test_data");
         ASSERT_TRUE(batch.addEvent(event));
     }
     {
-        FileBackedEventBatch batch("test_data");
+        FileEventBatch batch("test_data");
         auto upEv = getMessagesInEventList(batch.getEventsForUpload(10, 512).get());
         ASSERT_EQ(upEv.size(), 1);
         ASSERT_EQ(upEv[0], eventStr);
@@ -85,23 +85,23 @@ TEST(FileBackedEventBatchCustomTest, PersistenceTest) {
     remove("test_data");
 }
 
-TEST_F(FileBackedEventBatchTest, NoAddingEventsToFinalized) {
+TEST_F(FileEventBatchTest, NoAddingEventsToFinalized) {
     batch.setFinalized();
     ASSERT_FALSE(batch.addEvent(nlohmann::json::object()));
 }
 
-void FileBackedEventBatchWithDataTest::SetUp() {
+void FileEventBatchWithDataTest::SetUp() {
     for (int i = 0; i < TEST_EVENT_COUNT; i++) {
         nlohmann::json event = GetJsonFor(i);
         ASSERT_TRUE(batch.addEvent(event));
     }
 }
 
-nlohmann::json FileBackedEventBatchWithDataTest::GetJsonFor(int eventIndex) {
+nlohmann::json FileEventBatchWithDataTest::GetJsonFor(int eventIndex) {
     return {{"test", "This is a test log entry #" + std::to_string(eventIndex)}};
 }
 
-TEST_F(FileBackedEventBatchWithDataTest, ReadIncremental) {
+TEST_F(FileEventBatchWithDataTest, ReadIncremental) {
     for (size_t i = 1; i < TEST_EVENT_COUNT; i++) {
         auto val = batch.getEventsForUpload(i, i * 128);
         ASSERT_GT(val->getDataSize(), 0) << "Iteration: " << i;
@@ -113,7 +113,7 @@ TEST_F(FileBackedEventBatchWithDataTest, ReadIncremental) {
         }
     }
 }
-TEST_F(FileBackedEventBatchWithDataTest, ReadIncrementalWithRemoval) {
+TEST_F(FileEventBatchWithDataTest, ReadIncrementalWithRemoval) {
     size_t maxCount = 1;
     size_t gotEvents = 0;
     while (gotEvents < TEST_EVENT_COUNT) {

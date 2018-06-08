@@ -1,23 +1,23 @@
-#include <cll/file_backed_event_batch.h>
+#include <cll/file_event_batch.h>
 #include <unistd.h>
 #include <log.h>
 #include <fcntl.h>
 
 using namespace cll;
 
-FileBackedEventBatch::FileBackedEventBatch(std::string const& path) : path(path) {
+FileEventBatch::FileEventBatch(std::string const& path) : path(path) {
     fd = open(path.c_str(), O_RDWR | O_CREAT, 0600);
     if (fd < 0)
-        Log::warn("FileBackedEventBatch", "Error occurred trying to open the specified file");
+        Log::warn("FileEventBatch", "Error occurred trying to open the specified file");
     seekToEndAndGetFileSize(); // gets file size
 }
 
-FileBackedEventBatch::~FileBackedEventBatch() {
+FileEventBatch::~FileEventBatch() {
     if (fd >= 0)
         close(fd);
 }
 
-void FileBackedEventBatch::seekToEndAndGetFileSize() {
+void FileEventBatch::seekToEndAndGetFileSize() {
     off_t tg = lseek(fd, 0, SEEK_END);
     streamAtEnd = true;
     if (tg < 0)
@@ -25,12 +25,12 @@ void FileBackedEventBatch::seekToEndAndGetFileSize() {
     fileSize = (size_t) tg;
 }
 
-bool FileBackedEventBatch::addEvent(nlohmann::json const& rawData) {
+bool FileEventBatch::addEvent(nlohmann::json const& rawData) {
     std::lock_guard<std::mutex> lock (streamMutex);
     if (fd < 0)
         return false;
     if (finalized) {
-        Log::warn("FileBackedEventBatch", "Trying to add an event to a finalized EventBatch");
+        Log::warn("FileEventBatch", "Trying to add an event to a finalized EventBatch");
         return false;
     }
     if (!streamAtEnd)
@@ -40,7 +40,7 @@ bool FileBackedEventBatch::addEvent(nlohmann::json const& rawData) {
     while (o < data.size()) {
         ssize_t ret = write(fd, &data[o], data.size() - o);
         if (ret < 0) {
-            Log::warn("FileBackedEventBatch", "Failed to write an event due to an IO error");
+            Log::warn("FileEventBatch", "Failed to write an event due to an IO error");
             if (o > 0) {
                 // We got into a corrupted state pretty much. Try to remove the event using truncate.
                 ftruncate64(fd, fileSize);
@@ -53,7 +53,7 @@ bool FileBackedEventBatch::addEvent(nlohmann::json const& rawData) {
     return true;
 }
 
-std::unique_ptr<BatchedEventList> FileBackedEventBatch::getEventsForUpload(size_t maxCount, size_t maxSize) {
+std::unique_ptr<BatchedEventList> FileEventBatch::getEventsForUpload(size_t maxCount, size_t maxSize) {
     std::lock_guard<std::mutex> lock (streamMutex);
     if (fd < 0 || fileSize == 0)
         return nullptr;
@@ -87,7 +87,7 @@ std::unique_ptr<BatchedEventList> FileBackedEventBatch::getEventsForUpload(size_
     return std::unique_ptr<BatchedEventList>(new VectorBatchedEventList(std::move(data), n < fileSize));
 }
 
-void FileBackedEventBatch::onEventsUploaded(BatchedEventList& events) {
+void FileEventBatch::onEventsUploaded(BatchedEventList& events) {
     std::lock_guard<std::mutex> lock (streamMutex);
     if (fd < 0)
         return;
@@ -111,7 +111,7 @@ void FileBackedEventBatch::onEventsUploaded(BatchedEventList& events) {
         for (size_t o = 0; o < m; ) {
             ssize_t m2 = write(fd, &buf[o], m - o);
             if (m2 < 0) {
-                Log::warn("FileBackedEventBatch", "onEventsUploaded: failed to write data from buffer");
+                Log::warn("FileEventBatch", "onEventsUploaded: failed to write data from buffer");
                 break;
             }
             o += m2;
