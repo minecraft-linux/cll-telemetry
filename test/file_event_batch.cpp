@@ -24,11 +24,18 @@ TEST_F(FileEventBatchTest, BasicTest) {
     EXPECT_EQ(batch.getEventCount(), 0); // the basic test deletes the item
 }
 
-TEST_F(FileEventBatchTest, BasicItemCountTest) {
+TEST_F(FileEventBatchTest, ItemCountTest) {
     nlohmann::json event = {{"test", "This is a test log entry"}};
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 32; i++)
         batch.addEvent(event);
-    ASSERT_EQ(batch.getEventCount(), 3);
+    auto evs = batch.getEventsForUpload(8, 128 * 8);
+    ASSERT_NE(evs, nullptr);
+    batch.onEventsUploaded(*evs);
+    ASSERT_EQ(batch.getEventCount(), 32 - 8);
+    evs = batch.getEventsForUpload(32, 128 * 32);
+    ASSERT_NE(evs, nullptr);
+    batch.onEventsUploaded(*evs);
+    ASSERT_EQ(batch.getEventCount(), 0);
 }
 
 TEST(FileEventBatchCustomTest, PersistenceTest) {
