@@ -17,10 +17,10 @@ private:
 
     mutable std::mutex mutex;
     std::vector<nlohmann::json> items;
-    const int limit;
+    const size_t limit;
 
 public:
-    MemoryEventBatch(int limit = 50) : limit(limit) {}
+    MemoryEventBatch(size_t limit = 50) : limit(limit) {}
 
     bool addEvent(nlohmann::json const& rawData) override;
 
