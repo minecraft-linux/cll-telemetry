@@ -9,7 +9,8 @@ FileEventBatch::FileEventBatch(std::string const& path) : path(path) {
     fd = open(path.c_str(), O_RDWR | O_CREAT, 0600);
     if (fd < 0)
         Log::warn("FileEventBatch", "Error occurred trying to open the specified file");
-    seekToEndAndGetFileSize(); // gets file size
+    seekToEndAndGetFileSize();
+    countEventsInFile();
 }
 
 FileEventBatch::~FileEventBatch() {
@@ -23,6 +24,33 @@ void FileEventBatch::seekToEndAndGetFileSize() {
     if (tg < 0)
         tg = 0;
     fileSize = (size_t) tg;
+}
+
+void FileEventBatch::countEventsInFile() {
+    eventCount = 0;
+    if (fd < 0)
+        return;
+    lseek(fd, 0, SEEK_SET);
+    streamAtEnd = false;
+    char buf[16 * 1024];
+    size_t lastNewline = 0;
+    ssize_t n;
+    size_t o = 0;
+    while ((n = read(fd, buf, sizeof(buf))) > 0) {
+        char* ptr = buf;
+        while ((ptr = (char*) memchr(ptr, '\n', sizeof(buf) - (ptr - buf))) != nullptr) {
+            lastNewline = o + (ptr - buf);
+            eventCount++;
+            ptr++;
+        }
+        o += n;
+    }
+    if (lastNewline != fileSize) {
+        Log::warn("FileEventBatch", "Invalid event at the end of the file; trimming the file from %li to %lu",
+                  fileSize, lastNewline);
+        ftruncate64(fd, lastNewline);
+        fileSize = lastNewline;
+    }
 }
 
 bool FileEventBatch::canAddEvent(size_t eventSize) {
@@ -58,6 +86,7 @@ bool FileEventBatch::addEvent(std::string const& data) {
         o += ret;
     }
     fileSize += o; // Let's assume the event got written correctly
+    eventCount++;
     return true;
 }
 

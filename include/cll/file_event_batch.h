@@ -25,6 +25,8 @@ private:
         return (maxSize == 0 || fileSize + eventSize <= maxSize) && (maxCount == 0 || eventCount + 1 <= maxCount);
     }
 
+    void countEventsInFile();
+
 public:
     FileEventBatch(std::string const& path);
 
