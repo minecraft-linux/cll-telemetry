@@ -30,6 +30,8 @@ public:
 
     bool hasEvents() const override;
 
+    std::vector<nlohmann::json> transferAllEvents();
+
 };
 
 }

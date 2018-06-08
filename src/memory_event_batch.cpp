@@ -42,3 +42,8 @@ void MemoryEventBatch::onEventsUploaded(BatchedEventList& events) {
     std::lock_guard<std::mutex> lock (mutex);
     items.erase(items.begin(), items.begin() + ((EventList&) events).events);
 }
+
+std::vector<nlohmann::json> MemoryEventBatch::transferAllEvents() {
+    std::lock_guard<std::mutex> lock (mutex);
+    return std::move(items);
+}
