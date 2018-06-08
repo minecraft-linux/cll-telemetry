@@ -18,11 +18,12 @@ private:
     std::unique_ptr<FileEventBatch> oldestBatch;
     std::list<long long> oldBatches;
     std::unique_ptr<FileEventBatch> newestBatch;
+    long long newestBatchId = 0;
 
     std::list<long long> getBatches();
 
     std::string getBatchFileName(long long id);
-    std::unique_ptr<FileEventBatch> openBatch(long long id);
+    std::unique_ptr<FileEventBatch> openBatch(long long id, bool write = false);
 
     void checkOldestBatch();
 

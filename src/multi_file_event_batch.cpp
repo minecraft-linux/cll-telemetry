@@ -11,11 +11,10 @@ MultiFileEventBatch::MultiFileEventBatch(std::string path, std::string prefix, s
         this->path = this->path + '/';
     oldBatches = getBatches();
     if (!oldBatches.empty()) {
-        newestBatch = openBatch(oldBatches.back());
+        newestBatchId = oldBatches.back();
         oldBatches.pop_back();
-    } else {
-        newestBatch = openBatch(0);
     }
+    newestBatch = openBatch(newestBatchId, true);
 }
 
 std::list<long long> MultiFileEventBatch::getBatches() {
@@ -49,9 +48,11 @@ std::string MultiFileEventBatch::getBatchFileName(long long id) {
     return ss.str();
 }
 
-std::unique_ptr<FileEventBatch> MultiFileEventBatch::openBatch(long long id) {
+std::unique_ptr<FileEventBatch> MultiFileEventBatch::openBatch(long long id, bool write) {
     std::unique_ptr<FileEventBatch> ev(new FileEventBatch(getBatchFileName(id)));
-    ev->setFinalized();
+    ev->setLimit(fileMaxEvents, fileMaxSize);
+    if (!write)
+        ev->setFinalized();
     return ev;
 }
 
@@ -76,8 +77,18 @@ void MultiFileEventBatch::checkOldestBatch() {
 
 bool MultiFileEventBatch::addEvent(nlohmann::json const& rawData) {
     std::lock_guard<std::mutex> l (batchPointerMutex);
-    // TODO: open new batch files
-    return newestBatch->addEvent(rawData);
+    std::string data = rawData.dump() + "\r\n";
+    if (!newestBatch->canAddEvent(data.size())) {
+        newestBatch->setFinalized();
+        if (!oldestBatch && oldBatches.empty()) {
+            oldestBatch = std::move(newestBatch);
+        } else {
+            oldBatches.push_back(newestBatchId);
+        }
+        newestBatchId++;
+        newestBatch = openBatch(newestBatchId, true);
+    }
+    return newestBatch->addEvent(data);
 }
 
 std::unique_ptr<BatchedEventList> MultiFileEventBatch::getEventsForUpload(size_t maxCount, size_t maxSize) {
