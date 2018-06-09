@@ -67,12 +67,16 @@ public:
     }
 
     void downloadConfigs() {
+        bool downloadedAnything = false;
         for (auto const& config : configurations) {
-            if (config->needsRedownload())
+            if (config->needsRedownload()) {
                 config->download(cache.get());
+                downloadedAnything = true;
+            }
         }
-        for (auto const& c : updateCallbacks) {
-            c();
+        if (downloadedAnything) {
+            for (auto const& c : updateCallbacks)
+                c();
         }
     }
 

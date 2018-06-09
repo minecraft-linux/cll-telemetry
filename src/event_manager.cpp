@@ -23,7 +23,20 @@ EventManager::EventManager(std::string const& iKey, std::string const& batchesDi
             batchesDir, "crit", ".txt", (size_t) config.getMaxEventSizeInBytes(),
             (size_t) config.getMaxEventsPerPost()));
 
-    realtimeMemoryBatch =  std::unique_ptr<EventBatch>(new MemoryEventBatch());
+    mainUploadTask = std::unique_ptr<TaskWithDelayThread>(new TaskWithDelayThread(
+            std::chrono::minutes(config.getQueueDrainInterval()),
+            std::bind(&EventManager::uploadTasks, this)));
+    realtimeUploadTask = std::unique_ptr<TaskWithDelayThread>(new TaskWithDelayThread(
+            std::chrono::milliseconds(50),
+            std::bind(&EventManager::uploadRealtimeTasks, this)));
+
+    if (normalStorageBatch->hasEvents() || criticalStorageBatch->hasEvents())
+        mainUploadTask->requestRun(true);
+}
+
+void EventManager::updateConfigIfNeeded() {
+    std::lock_guard<std::mutex> lock (configUpdateMutex);
+    config.downloadConfigs();
 }
 
 void EventManager::onConfigurationUpdated() {
@@ -33,19 +46,51 @@ void EventManager::onConfigurationUpdated() {
             (size_t) config.getMaxEventSizeInBytes(), (size_t) config.getMaxEventsPerPost());
 }
 
+void EventManager::uploadTasks() {
+    while (normalStorageBatch->hasEvents() || criticalStorageBatch->hasEvents()) {
+        updateConfigIfNeeded();
+        if (normalStorageBatch->hasEvents())
+            uploader.sendEvents(*normalStorageBatch);
+        if (criticalStorageBatch->hasEvents())
+            uploader.sendEvents(*criticalStorageBatch);
+        // TODO: exponential backoff
+    }
+}
+
+void EventManager::uploadRealtimeTasks() {
+    while (realtimeMemoryBatch.hasEvents()) {
+        updateConfigIfNeeded();
+        if (!uploader.sendEvents(realtimeMemoryBatch)) {
+            // if the upload fails, transfer the events to the disk-backed queues, and queue an immediate reupload
+            // this lets us handle the backoff only in that function
+            for (auto const& ev : realtimeMemoryBatch.transferAllEvents()) {
+                EventFlags flags = (EventFlags) ev.value("flags", 0);
+                if (EventFlagSet(flags, EventFlags::PersistenceCritical))
+                    criticalStorageBatch->addEvent(ev);
+                else
+                    normalStorageBatch->addEvent(ev);
+            }
+            mainUploadTask->requestRun(true);
+        }
+    }
+}
+
 void EventManager::add(Event event) {
     auto serialized = serializer.createEnvelopeFor(event);
+    bool realtime = false;
     if (EventFlagSet(event.getFlags(), EventFlags::LatencyRealtime)) {
-        if (realtimeMemoryBatch->addEvent(serialized))
+        if (realtimeMemoryBatch.addEvent(serialized))
             return;
-        // TODO: mark the queue we end up with to be uploaded immediately
+        realtime = true;
     }
-    if (EventFlagSet(event.getFlags(), EventFlags::PersistenceCritical)) {
-        if (criticalStorageBatch->addEvent(serialized))
-            return;
-    } else {
-        if (normalStorageBatch->addEvent(serialized))
-            return;
-    }
-    Log::warn("EventManager", "Event dropped");
+    bool added;
+    if (EventFlagSet(event.getFlags(), EventFlags::PersistenceCritical))
+        added = criticalStorageBatch->addEvent(serialized);
+    else
+        added = normalStorageBatch->addEvent(serialized);
+
+    if (added)
+        mainUploadTask->requestRun(realtime);
+    else
+        Log::warn("EventManager", "Event dropped");
 }

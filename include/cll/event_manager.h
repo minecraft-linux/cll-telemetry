@@ -1,10 +1,11 @@
 #pragma once
 
 #include "event.h"
-#include "event_batch.h"
 #include "event_uploader.h"
 #include "event_serializer.h"
 #include "configuration_manager.h"
+#include "task_with_delay_thread.h"
+#include "memory_event_batch.h"
 
 namespace cll {
 
@@ -13,12 +14,18 @@ class EventManager {
 private:
     std::string iKey;
     ConfigurationManager config;
+    std::mutex configUpdateMutex;
     EventUploader uploader;
     EventSerializer serializer;
     std::unique_ptr<EventBatch> normalStorageBatch, criticalStorageBatch;
-    std::unique_ptr<EventBatch> realtimeMemoryBatch;
+    MemoryEventBatch realtimeMemoryBatch;
+    std::unique_ptr<TaskWithDelayThread> mainUploadTask, realtimeUploadTask;
 
+    void updateConfigIfNeeded();
     void onConfigurationUpdated();
+
+    void uploadTasks();
+    void uploadRealtimeTasks();
 
 public:
     /**
@@ -30,11 +37,6 @@ public:
     EventManager(std::string const& iKey, std::string const& batchesDir, std::string const& cacheDir);
 
     inline std::string const& getIKey() const { return iKey; }
-
-    inline EventUploader& getUploader() { return uploader; }
-
-    inline ConfigurationManager& getConfigurationManager() { return config; }
-
 
     void add(Event event);
 

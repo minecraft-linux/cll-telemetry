@@ -22,7 +22,7 @@ private:
     std::vector<std::unique_ptr<EventUploadStep>> steps;
 
 public:
-    void sendEvents(EventBatch* batch);
+    bool sendEvents(EventBatch& batch);
 
     void addStep(std::unique_ptr<EventUploadStep> step) {
         steps.push_back(std::move(step));
