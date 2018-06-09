@@ -23,9 +23,10 @@ class WrapperBufferedEventList : public BufferedEventList {
 
 public:
     std::unique_ptr<BatchedEventList> wrapped;
+    bool hasMemoryEvents;
 
-    WrapperBufferedEventList(Type type, std::unique_ptr<BatchedEventList> wrapped) : BufferedEventList(type),
-                                                                                     wrapped(std::move(wrapped)) {}
+    WrapperBufferedEventList(Type type, std::unique_ptr<BatchedEventList> wrapped, bool hasMemoryEvents = false) :
+            BufferedEventList(type), wrapped(std::move(wrapped)), hasMemoryEvents(hasMemoryEvents) {}
 
     const char* getData() const override {
         return wrapped->getData();
@@ -36,7 +37,7 @@ public:
     }
 
     bool hasMoreEvents() const override {
-        return wrapped->hasMoreEvents();
+        return hasMemoryEvents || wrapped->hasMoreEvents();
     }
 
 };

@@ -25,7 +25,7 @@ std::unique_ptr<BatchedEventList> BufferedEventBatch::getEventsForUpload(size_t 
         }
         if (ret != nullptr)
             return std::unique_ptr<BatchedEventList>(new WrapperBufferedEventList(BufferedEventList::Type::Wrapped,
-                                                                                  std::move(ret)));
+                                                                                  std::move(ret), mem.hasEvents()));
     }
     auto ret = mem.getEventsForUpload(maxCount, maxSize);
     return std::unique_ptr<BatchedEventList>(new WrapperBufferedEventList(BufferedEventList::Type::Memory,
