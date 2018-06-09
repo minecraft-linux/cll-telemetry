@@ -41,4 +41,33 @@ public:
 
 };
 
+class MergedBufferedEventList : public BufferedEventList {
+
+public:
+    std::unique_ptr<BatchedEventList> wrapped, mem;
+    std::vector<char> data;
+
+    MergedBufferedEventList(std::unique_ptr<BatchedEventList> wrapped, std::unique_ptr<BatchedEventList> mem) :
+            BufferedEventList(Type::Merged), wrapped(std::move(wrapped)), mem(std::move(mem)) {
+        size_t ws = wrapped->getDataSize();
+        size_t ms = mem->getDataSize();
+        data.resize(ws + ms);
+        memcpy(data.data(), wrapped->getData(), ws);
+        memcpy(&data.data()[ws], mem->getData(), ms);
+    }
+
+    const char* getData() const override {
+        return data.data();
+    }
+
+    size_t getDataSize() const override {
+        return data.size();
+    }
+
+    bool hasMoreEvents() const override {
+        return wrapped->hasMoreEvents() || mem->hasMoreEvents();
+    }
+
+};
+
 }

@@ -15,6 +15,10 @@ std::unique_ptr<BatchedEventList> BufferedEventBatch::getEventsForUpload(size_t 
     std::lock_guard<std::mutex> l (mutex);
     if (wrapped->hasEvents()) {
         auto ret = wrapped->getEventsForUpload(maxCount, maxSize);
+        if (!ret->hasMoreEvents() && mem.hasEvents()) {
+            auto retMem = mem.getEventsForUpload(maxCount, maxSize);
+            return std::unique_ptr<BatchedEventList>(new MergedBufferedEventList(std::move(ret), std::move(retMem)));
+        }
         return std::unique_ptr<BatchedEventList>(new WrapperBufferedEventList(BufferedEventList::Type::Wrapped,
                                                                               std::move(ret)));
     }
@@ -31,6 +35,10 @@ void BufferedEventBatch::onEventsUploaded(BatchedEventList& events) {
             break;
         case BufferedEventList::Type::Memory:
             mem.onEventsUploaded(*((WrapperBufferedEventList&) events).wrapped);
+            break;
+        case BufferedEventList::Type::Merged:
+            wrapped->onEventsUploaded(*((MergedBufferedEventList&) events).wrapped);
+            mem.onEventsUploaded(*((MergedBufferedEventList&) events).mem);
             break;
     }
 }
