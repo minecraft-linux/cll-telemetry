@@ -18,17 +18,24 @@ static void CleanUpBatch(MultiFileEventBatch& batch) {
     remove(batch.getPath().c_str());
 }
 
-TEST(MultiFileEventBatchTest, BasicTest) {
+class MultiFileEventBatchTest : public ::testing::Test {
+public:
+    std::unique_ptr<MultiFileEventBatch> batch;
+
+    ~MultiFileEventBatchTest() {
+        CleanUpBatch(*batch);
+    }
+};
+
+TEST_F(MultiFileEventBatchTest, BasicTest) {
     mkdir("multifile_test", 0700);
-    MultiFileEventBatch batch ("multifile_test", "events", ".txt", 1024, 2);
-    EventBatchTest::BasicTest(batch);
-    CleanUpBatch(batch);
+    batch = std::unique_ptr<MultiFileEventBatch>(new MultiFileEventBatch("multifile_test", "events", ".txt", 1024, 2));
+    EventBatchTest::BasicTest(*batch);
 }
 
-TEST(MultiFileEventBatchTest, ReadIncrementalWithRemoval) {
+TEST_F(MultiFileEventBatchTest, ReadIncrementalWithRemoval) {
     mkdir("multifile_test", 0700);
-    MultiFileEventBatch batch ("multifile_test", "events", ".txt", 320, 10);
-    EventBatchTest::SetUpTestEvents(batch);
-    EventBatchTest::ReadIncrementalWithRemoval(batch);
-    CleanUpBatch(batch);
+    batch = std::unique_ptr<MultiFileEventBatch>(new MultiFileEventBatch("multifile_test", "events", ".txt", 320, 10));
+    EventBatchTest::SetUpTestEvents(*batch);
+    EventBatchTest::ReadIncrementalWithRemoval(*batch);
 }
