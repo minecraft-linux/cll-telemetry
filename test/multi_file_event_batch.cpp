@@ -25,10 +25,10 @@ TEST(MultiFileEventBatchTest, BasicTest) {
     CleanUpBatch(batch);
 }
 
-TEST(MultiFileEventBatchTest, ReadIncremental) {
+TEST(MultiFileEventBatchTest, ReadIncrementalWithRemoval) {
     mkdir("multifile_test", 0700);
     MultiFileEventBatch batch ("multifile_test", "events", ".txt", 320, 10);
     EventBatchTest::SetUpTestEvents(batch);
-    EventBatchTest::ReadIncremental(batch);
+    EventBatchTest::ReadIncrementalWithRemoval(batch);
     CleanUpBatch(batch);
 }
