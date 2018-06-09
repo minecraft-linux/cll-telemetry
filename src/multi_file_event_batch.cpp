@@ -95,6 +95,7 @@ std::unique_ptr<BatchedEventList> MultiFileEventBatch::getEventsForUpload(size_t
     std::lock_guard<std::mutex> l (batchPointerMutex);
     checkOldestBatch();
     if (oldestBatch) {
+        // TODO: This does not set hasMoreEvents properly
         return oldestBatch->getEventsForUpload(maxCount, maxSize);
     } else {
         // the newest batch is not set as the oldest batch, so we need to check for it here

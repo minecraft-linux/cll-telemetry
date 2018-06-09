@@ -27,7 +27,7 @@ void EventBatchTest::BasicTest(EventBatch& batch) {
 void EventBatchTest::SetUpTestEvents(cll::EventBatch& batch, size_t eventCount) {
     for (int i = 0; i < eventCount; i++) {
         nlohmann::json event = GetJsonFor(i);
-        ASSERT_TRUE(batch.addEvent(event));
+        ASSERT_TRUE(batch.addEvent(event)) << "Index: " << i;
     }
 }
 
