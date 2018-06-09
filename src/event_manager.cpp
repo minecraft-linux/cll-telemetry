@@ -13,6 +13,7 @@ EventManager::EventManager(std::string const& iKey, std::string const& batchesDi
 
     serializer.setIKey(iKey);
 
+    // TODO: Update the settings when we update settings
     normalStorageBatch = std::unique_ptr<EventBatch>(new MultiFileEventBatch(
             batchesDir, "normal", ".txt", (size_t) config.getMaxEventSizeInBytes(),
             (size_t) config.getMaxEventsPerPost()));
