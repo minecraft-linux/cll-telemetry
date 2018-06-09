@@ -52,13 +52,27 @@ void EventManager::onConfigurationUpdated() {
 }
 
 void EventManager::uploadTasks() {
+    const std::chrono::milliseconds baseBackoffTime (std::chrono::seconds(5));
+    std::chrono::milliseconds nextBackoffTime = baseBackoffTime;
     while (normalStorageBatch->hasEvents() || criticalStorageBatch->hasEvents()) {
         updateConfigIfNeeded();
-        if (normalStorageBatch->hasEvents())
-            uploader.sendEvents(*normalStorageBatch, uploaderMaxEvents, uploaderMaxSize);
+        EventUploadStatus status;
         if (criticalStorageBatch->hasEvents())
-            uploader.sendEvents(*criticalStorageBatch, uploaderMaxEvents, uploaderMaxSize);
-        // TODO: exponential backoff
+            status = uploader.sendEvents(*criticalStorageBatch, uploaderMaxEvents, uploaderMaxSize);
+        else if (normalStorageBatch->hasEvents())
+            status = uploader.sendEvents(*normalStorageBatch, uploaderMaxEvents, uploaderMaxSize);
+        else
+            break;
+        if (status || status.state == EventUploadStatus::State::ErrorRateLimit)
+            nextBackoffTime = baseBackoffTime;
+        if (status)
+            continue;
+        if (status.state == EventUploadStatus::State::ErrorRateLimit) {
+            std::this_thread::sleep_for(status.retryAfter);
+        } else {
+            std::this_thread::sleep_for(nextBackoffTime);
+            nextBackoffTime *= 2;
+        }
     }
 }
 
