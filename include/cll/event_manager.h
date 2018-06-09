@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include "event.h"
 #include "event_uploader.h"
 #include "event_serializer.h"
@@ -15,6 +16,7 @@ private:
     std::string iKey;
     ConfigurationManager config;
     std::mutex configUpdateMutex;
+    std::atomic<size_t> uploaderMaxEvents, uploaderMaxSize;
     EventUploader uploader;
     EventSerializer serializer;
     std::unique_ptr<EventBatch> normalStorageBatch, criticalStorageBatch;

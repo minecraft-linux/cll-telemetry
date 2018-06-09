@@ -14,6 +14,9 @@ EventManager::EventManager(std::string const& iKey, std::string const& batchesDi
 
     serializer.setIKey(iKey);
 
+    uploaderMaxSize.store((size_t) config.getMaxEventSizeInBytes());
+    uploaderMaxEvents.store((size_t) config.getMaxEventsPerPost());
+
     normalStorageBatch = std::unique_ptr<EventBatch>(new MultiFileEventBatch(
             batchesDir, "normal", ".txt", (size_t) config.getMaxEventSizeInBytes(),
             (size_t) config.getMaxEventsPerPost()));
@@ -44,15 +47,17 @@ void EventManager::onConfigurationUpdated() {
             (size_t) config.getMaxEventSizeInBytes(), (size_t) config.getMaxEventsPerPost());
     ((MultiFileEventBatch&) *criticalStorageBatch).setFileLimits(
             (size_t) config.getMaxEventSizeInBytes(), (size_t) config.getMaxEventsPerPost());
+    uploaderMaxSize.store((size_t) config.getMaxEventSizeInBytes());
+    uploaderMaxEvents.store((size_t) config.getMaxEventsPerPost());
 }
 
 void EventManager::uploadTasks() {
     while (normalStorageBatch->hasEvents() || criticalStorageBatch->hasEvents()) {
         updateConfigIfNeeded();
         if (normalStorageBatch->hasEvents())
-            uploader.sendEvents(*normalStorageBatch);
+            uploader.sendEvents(*normalStorageBatch, uploaderMaxEvents, uploaderMaxSize);
         if (criticalStorageBatch->hasEvents())
-            uploader.sendEvents(*criticalStorageBatch);
+            uploader.sendEvents(*criticalStorageBatch, uploaderMaxEvents, uploaderMaxSize);
         // TODO: exponential backoff
     }
 }
@@ -60,7 +65,7 @@ void EventManager::uploadTasks() {
 void EventManager::uploadRealtimeTasks() {
     while (realtimeMemoryBatch.hasEvents()) {
         updateConfigIfNeeded();
-        if (!uploader.sendEvents(realtimeMemoryBatch)) {
+        if (!uploader.sendEvents(realtimeMemoryBatch, uploaderMaxEvents, uploaderMaxSize)) {
             // if the upload fails, transfer the events to the disk-backed queues, and queue an immediate reupload
             // this lets us handle the backoff only in that function
             for (auto const& ev : realtimeMemoryBatch.transferAllEvents()) {
