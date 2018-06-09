@@ -20,6 +20,22 @@ void HttpRequest::setUrl(std::string const& url) {
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 }
 
+void HttpRequest::setMethod(HttpMethod method) {
+    switch (method) {
+        case HttpMethod::GET:
+            curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
+            break;
+        case HttpMethod::POST:
+            curl_easy_setopt(curl, CURLOPT_POST, 1L);
+            break;
+    }
+}
+
+void HttpRequest::setPostData(const char* data, size_t size) {
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long) size);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+}
+
 void HttpRequest::addHeader(std::string const& name, std::string const& value) {
     headers = curl_slist_append(headers, (name + ": " + value).c_str());
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);

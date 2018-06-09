@@ -6,6 +6,10 @@
 
 namespace cll {
 
+enum class HttpMethod {
+    GET, POST
+};
+
 class HttpRequest {
 
 private:
@@ -21,6 +25,10 @@ public:
     ~HttpRequest();
 
     void setUrl(std::string const& url);
+
+    void setMethod(HttpMethod method);
+
+    void setPostData(const char* data, size_t size);
 
     void addHeader(std::string const& name, std::string const& value);
 
