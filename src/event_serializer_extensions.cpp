@@ -1,7 +1,20 @@
-#include "event_serializer_extensions.h"
+#include <cll/event_serializer_extensions.h>
 #include <cll/event.h>
 
 using namespace cll;
+
+DefaultExtensions::DefaultExtensions() {
+    user.setLocalId("");
+    device.setLocalId("");
+}
+
+void DefaultExtensions::addTo(EventSerializer& serializer) {
+    serializer.addExtension(&user);
+    serializer.addExtension(&os);
+    serializer.addExtension(&device);
+    serializer.addExtension(&android);
+}
+
 
 OsInfoExtension::OsInfoExtension() {
     data["ver"] = "1.0";

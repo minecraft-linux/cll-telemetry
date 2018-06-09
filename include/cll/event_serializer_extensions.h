@@ -59,4 +59,25 @@ public:
     nlohmann::json build(Event const& ev) override;
 };
 
+
+class DefaultExtensions {
+
+private:
+    UserInfoExtension user;
+    OsInfoExtension os;
+    DeviceInfoExtension device;
+    AndroidExtension android;
+
+public:
+    DefaultExtensions();
+
+    void addTo(EventSerializer& serializer);
+
+    UserInfoExtension& getUser() { return user; }
+    OsInfoExtension& getOs() { return os; }
+    DeviceInfoExtension& getDevice() { return device; }
+    AndroidExtension& getAndroid() { return android; }
+
+};
+
 }
