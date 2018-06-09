@@ -1,4 +1,5 @@
 #include "event_serializer_extensions.h"
+#include <cll/event.h>
 
 using namespace cll;
 
@@ -17,4 +18,15 @@ std::string OsInfoExtension::getLocale() const {
     if (cppName[2] != '-') // check for invalid locale
         return std::string();
     return cppName;
+}
+
+
+nlohmann::json AndroidExtension::build(Event const& ev) {
+    nlohmann::json data;
+    data["ver"] = "1.0";
+    data["libVer"] = "3.170921.0";
+    auto& tickets = data["tickets"] = nlohmann::json::array();
+    for (auto const& id : ev.getIds())
+        tickets.push_back(id);
+    return data;
 }
