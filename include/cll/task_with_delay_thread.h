@@ -19,7 +19,7 @@ private:
     std::thread thread;
     std::mutex mutex;
     std::condition_variable cv;
-    bool running, hasPendingTask, runImmediately;
+    bool running = false, hasPendingTask = false, runImmediately = false;
 
     void doThreadLoop();
 
