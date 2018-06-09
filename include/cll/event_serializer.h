@@ -28,7 +28,7 @@ private:
     std::string osVer;
     std::string appId;
     std::string appVer;
-    std::vector<std::unique_ptr<Extension>> extensions;
+    std::vector<Extension*> extensions;
 
 public:
     EventSerializer();
@@ -37,8 +37,8 @@ public:
      * Adds an extension, which will be added to each envelope in 'ext'.
      * @param extension the extension object
      */
-    void addExtension(std::unique_ptr<Extension> extension) {
-        extensions.push_back(std::move(extension));
+    void addExtension(Extension* extension) {
+        extensions.push_back(extension);
     }
 
     /**
