@@ -16,6 +16,9 @@ enum class EventFlags {
 inline EventFlags operator |(EventFlags a, EventFlags b) {
     return (EventFlags) ((int) a | (int) b);
 }
+inline bool EventFlagSet(EventFlags a, EventFlags b) {
+    return ((int) a & (int) b);
+}
 
 class Event {
 
