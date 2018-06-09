@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <functional>
 #include "configuration.h"
 #include "configuration_cache.h"
 
@@ -11,6 +12,7 @@ class ConfigurationManager {
 private:
     std::unique_ptr<ConfigurationCache> cache;
     std::vector<std::unique_ptr<Configuration>> configurations;
+    std::vector<std::function<void ()>> updateCallbacks;
 
 public:
     void setCache(std::unique_ptr<ConfigurationCache> cache) {
@@ -28,6 +30,10 @@ public:
                 "https://settings.data.microsoft.com/settings/v2.0/androidLL/app")));
         configurations.push_back(std::unique_ptr<Configuration>(new Configuration(
                 "https://settings.data.microsoft.com/settings/v2.0/telemetry/" + iKey)));
+    }
+
+    void addUpdateCallback(std::function<void ()> cb) {
+        updateCallbacks.push_back(cb);
     }
 
     template <typename T, ConfigurationProperty<T> Configuration::*Property, T def>
@@ -64,6 +70,9 @@ public:
         for (auto const& config : configurations) {
             if (config->needsRedownload())
                 config->download(cache.get());
+        }
+        for (auto const& c : updateCallbacks) {
+            c();
         }
     }
 
