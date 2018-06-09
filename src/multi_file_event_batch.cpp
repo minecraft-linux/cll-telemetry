@@ -95,18 +95,23 @@ std::unique_ptr<BatchedEventList> MultiFileEventBatch::getEventsForUpload(size_t
     std::lock_guard<std::mutex> l (batchPointerMutex);
     checkOldestBatch();
     if (oldestBatch) {
-        // TODO: This does not set hasMoreEvents properly
-        return oldestBatch->getEventsForUpload(maxCount, maxSize);
+        std::unique_ptr<BatchedEventList> ret = oldestBatch->getEventsForUpload(maxCount, maxSize);
+        if (!ret)
+            return nullptr;
+        return std::unique_ptr<BatchedEventList>(new EventList(std::move(ret), true));
     } else {
         // the newest batch is not set as the oldest batch, so we need to check for it here
-        return newestBatch->getEventsForUpload(maxCount, maxSize);
+        std::unique_ptr<BatchedEventList> ret = newestBatch->getEventsForUpload(maxCount, maxSize);
+        if (!ret)
+            return nullptr;
+        return std::unique_ptr<BatchedEventList>(new EventList(std::move(ret), false));
     }
 }
 
 void MultiFileEventBatch::onEventsUploaded(BatchedEventList& events) {
     std::lock_guard<std::mutex> l (batchPointerMutex);
     if (oldestBatch) {
-        oldestBatch->onEventsUploaded(events);
+        oldestBatch->onEventsUploaded(*((EventList&) events).wrapped);
         // if the batch has no more events, reset the pointer; the oldestBatch pointer will be auto recreated as needed
         // when checkOldestBatch() is called
         // the batch file will be automatically deleted by the onEventsUploaded if there are no more events
@@ -114,7 +119,7 @@ void MultiFileEventBatch::onEventsUploaded(BatchedEventList& events) {
             oldestBatch.reset();
         }
     } else {
-        newestBatch->onEventsUploaded(events);
+        newestBatch->onEventsUploaded(*((EventList&) events).wrapped);
     }
 }
 

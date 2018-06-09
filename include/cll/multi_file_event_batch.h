@@ -9,6 +9,26 @@ namespace cll {
 class MultiFileEventBatch : public EventBatch {
 
 private:
+    struct EventList : public BatchedEventList {
+
+        std::unique_ptr<BatchedEventList> wrapped;
+        bool hasMoreFiles;
+
+        EventList(std::unique_ptr<BatchedEventList> wrapped, bool hasMore) :
+                wrapped(std::move(wrapped)), hasMoreFiles(hasMoreFiles) {}
+
+        const char* getData() const override {
+            return wrapped->getData();
+        }
+        size_t getDataSize() const override {
+            return wrapped->getDataSize();
+        }
+        bool hasMoreEvents() const override {
+            return hasMoreFiles | wrapped->hasMoreEvents();
+        }
+
+    };
+
     std::string path;
     std::string prefix;
     std::string suffix;
