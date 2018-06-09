@@ -127,3 +127,12 @@ bool MultiFileEventBatch::hasEvents() const {
     std::lock_guard<std::mutex> l (batchPointerMutex);
     return !oldBatches.empty() || oldestBatch != nullptr || newestBatch->hasEvents();
 }
+
+void MultiFileEventBatch::setFileLimits(size_t maxSize, size_t maxEvents) {
+    std::lock_guard<std::mutex> l (batchPointerMutex);
+    fileMaxSize = maxSize;
+    fileMaxEvents = maxEvents;
+    if (oldestBatch)
+        oldestBatch->setLimit(maxSize, maxEvents);
+    newestBatch->setLimit(maxSize, maxEvents);
+}

@@ -25,6 +25,8 @@ public:
         flush();
     }
 
+    EventBatch* getWrapped() const { return wrapped.get(); }
+
     bool addEvent(nlohmann::json const& rawData) override;
 
     std::unique_ptr<BatchedEventList> getEventsForUpload(size_t maxCount, size_t maxSize) override;

@@ -10,10 +10,10 @@ EventManager::EventManager(std::string const& iKey, std::string const& batchesDi
         : iKey(iKey) {
     config.setCache(std::unique_ptr<ConfigurationCache>(new FileConfigurationCache(cacheDir + "/config_cache.json")));
     config.addDefaultConfigurations(iKey);
+    config.addUpdateCallback(std::bind(&EventManager::onConfigurationUpdated, this));
 
     serializer.setIKey(iKey);
 
-    // TODO: Update the settings when we update settings
     normalStorageBatch = std::unique_ptr<EventBatch>(new MultiFileEventBatch(
             batchesDir, "normal", ".txt", (size_t) config.getMaxEventSizeInBytes(),
             (size_t) config.getMaxEventsPerPost()));
@@ -24,6 +24,13 @@ EventManager::EventManager(std::string const& iKey, std::string const& batchesDi
             (size_t) config.getMaxEventsPerPost()));
 
     realtimeMemoryBatch =  std::unique_ptr<EventBatch>(new MemoryEventBatch());
+}
+
+void EventManager::onConfigurationUpdated() {
+    ((MultiFileEventBatch&) *((BufferedEventBatch&) *normalStorageBatch).getWrapped()).setFileLimits(
+            (size_t) config.getMaxEventSizeInBytes(), (size_t) config.getMaxEventsPerPost());
+    ((MultiFileEventBatch&) *criticalStorageBatch).setFileLimits(
+            (size_t) config.getMaxEventSizeInBytes(), (size_t) config.getMaxEventsPerPost());
 }
 
 void EventManager::add(Event event) {

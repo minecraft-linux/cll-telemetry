@@ -43,7 +43,10 @@ private:
     void checkOldestBatch();
 
 public:
-    MultiFileEventBatch(std::string path, std::string prefix, std::string suffix, size_t fileMaxSize, size_t fileMaxEvents);
+    MultiFileEventBatch(std::string path, std::string prefix, std::string suffix,
+                        size_t fileMaxSize, size_t fileMaxEvents);
+
+    void setFileLimits(size_t maxSize, size_t maxEvents);
 
     std::string const& getPath() const { return path; }
 

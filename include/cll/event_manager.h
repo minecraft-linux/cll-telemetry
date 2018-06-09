@@ -18,6 +18,8 @@ private:
     std::unique_ptr<EventBatch> normalStorageBatch, criticalStorageBatch;
     std::unique_ptr<EventBatch> realtimeMemoryBatch;
 
+    void onConfigurationUpdated();
+
 public:
     /**
      * Creates the Event Manager with the specified application-specific instrumentation key.
