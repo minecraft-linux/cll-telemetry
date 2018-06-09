@@ -1,4 +1,5 @@
 #include <cll/event_serializer.h>
+#include <cll/event_serializer_extensions.h>
 #include <cll/event.h>
 #include <gtest/gtest.h>
 
@@ -16,4 +17,31 @@ TEST(EventSerializerTest, BasicTest) {
 
     nlohmann::json json = serializer.createEnvelopeFor(testEvent);
     ASSERT_EQ(json.dump(), "{\"appId\":\"my-app\",\"appVer\":\"1.0.0\",\"epoch\":\"12345678\",\"flags\":514,\"iKey\":\"test-ikey\",\"name\":\"Event Name\",\"os\":\"Linux\",\"osVer\":\"1.2.3.4\",\"popSample\":100.0,\"seqNum\":0,\"time\":\"2018-06-07T16:30:00.000Z\",\"ver\":\"2.1.0\"}");
+}
+
+TEST(EventSerializerTest, UserInfoExtension) {
+    EventSerializer serializer;
+
+    UserInfoExtension userExt;
+    userExt.setLocalId("1234");
+    serializer.addExtension(userExt);
+
+    Event testEvent ("Event Name", {{"some", "data"}}, EventFlags::LatencyRealtime | EventFlags::PersistenceCritical,
+                     {}, Event::Time(std::chrono::seconds(1528389000)));
+
+    nlohmann::json json = serializer.createEnvelopeFor(testEvent)["ext"]["user"];
+    ASSERT_EQ(json.dump(),"{\"localId\":\"1234\",\"ver\":\"1.0\"}");
+}
+
+TEST(EventSerializerTest, AndroidExtension) {
+    EventSerializer serializer;
+
+    AndroidExtension androidExt;
+    serializer.addExtension(androidExt);
+
+    Event testEvent ("Event Name", {{"some", "data"}}, EventFlags::LatencyRealtime | EventFlags::PersistenceCritical,
+                     {"1234"}, Event::Time(std::chrono::seconds(1528389000)));
+
+    nlohmann::json json = serializer.createEnvelopeFor(testEvent)["ext"]["android"];
+    ASSERT_EQ(json.dump(), "{\"libVer\":\"3.170921.0\",\"tickets\":[\"1234\"],\"ver\":\"1.0\"}");
 }
