@@ -37,8 +37,8 @@ public:
      * Adds an extension, which will be added to each envelope in 'ext'.
      * @param extension the extension object
      */
-    void addExtension(Extension* extension) {
-        extensions.push_back(extension);
+    void addExtension(Extension& extension) {
+        extensions.push_back(&extension);
     }
 
     /**

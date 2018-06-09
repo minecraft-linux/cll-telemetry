@@ -9,10 +9,10 @@ DefaultExtensions::DefaultExtensions() {
 }
 
 void DefaultExtensions::addTo(EventSerializer& serializer) {
-    serializer.addExtension(&user);
-    serializer.addExtension(&os);
-    serializer.addExtension(&device);
-    serializer.addExtension(&android);
+    serializer.addExtension(user);
+    serializer.addExtension(os);
+    serializer.addExtension(device);
+    serializer.addExtension(android);
 }
 
 
