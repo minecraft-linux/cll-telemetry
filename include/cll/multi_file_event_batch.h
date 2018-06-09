@@ -30,6 +30,8 @@ private:
 public:
     MultiFileEventBatch(std::string path, std::string prefix, std::string suffix, size_t fileMaxSize, size_t fileMaxEvents);
 
+    std::string const& getPath() const { return path; }
+
     bool addEvent(nlohmann::json const& rawData) override;
 
     std::unique_ptr<BatchedEventList> getEventsForUpload(size_t maxCount, size_t maxSize) override;
