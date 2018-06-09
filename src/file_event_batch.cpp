@@ -126,7 +126,7 @@ std::unique_ptr<BatchedEventList> FileEventBatch::getEventsForUpload(size_t maxC
     }
     n = data_ptr - data.data();
     data.resize(n);
-    return std::unique_ptr<BatchedEventList>(new CountedVectorBatchedEventList(std::move(data), events, n < fileSize));
+    return std::unique_ptr<BatchedEventList>(new VectorBatchedEventList(std::move(data), events, n < fileSize));
 }
 
 void FileEventBatch::onEventsUploaded(BatchedEventList& events) {
@@ -165,5 +165,5 @@ void FileEventBatch::onEventsUploaded(BatchedEventList& events) {
     close(fdIn);
     ftruncate64(fd, n);
     fileSize = n;
-    eventCount -= ((CountedVectorBatchedEventList&) events).getEvents();
+    eventCount -= ((VectorBatchedEventList&) events).getEventCount();
 }

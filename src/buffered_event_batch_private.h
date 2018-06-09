@@ -36,6 +36,10 @@ public:
         return wrapped->getDataSize();
     }
 
+    size_t getEventCount() const override {
+        return wrapped->getEventCount();
+    }
+
     bool hasMoreEvents() const override {
         return hasMemoryEvents || wrapped->hasMoreEvents();
     }
@@ -63,6 +67,10 @@ public:
 
     size_t getDataSize() const override {
         return data.size();
+    }
+
+    size_t getEventCount() const override {
+        return wrapped->getEventCount() + mem->getEventCount();
     }
 
     bool hasMoreEvents() const override {

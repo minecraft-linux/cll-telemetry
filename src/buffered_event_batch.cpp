@@ -18,7 +18,7 @@ std::unique_ptr<BatchedEventList> BufferedEventBatch::getEventsForUpload(size_t 
     if (wrapped->hasEvents()) {
         auto ret = wrapped->getEventsForUpload(maxCount, maxSize);
         if (ret != nullptr && !ret->hasMoreEvents() && mem.hasEvents()) {
-            auto retMem = mem.getEventsForUpload(maxCount, maxSize - ret->getDataSize());
+            auto retMem = mem.getEventsForUpload(maxCount - ret->getEventCount(), maxSize - ret->getDataSize());
             if (retMem)
                 return std::unique_ptr<BatchedEventList>(new MergedBufferedEventList(std::move(ret),
                                                                                      std::move(retMem)));
