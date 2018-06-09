@@ -27,7 +27,7 @@ std::string OsInfoExtension::getLocale() const {
         return std::string();
     cppName = cppName.substr(0, 5); // cut the suffix
     if (cppName[2] == '_')
-        cppName = '-';
+        cppName[2] = '-';
     if (cppName[2] != '-') // check for invalid locale
         return std::string();
     return cppName;
