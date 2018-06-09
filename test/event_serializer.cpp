@@ -45,3 +45,20 @@ TEST(EventSerializerTest, AndroidExtension) {
     nlohmann::json json = serializer.createEnvelopeFor(testEvent)["ext"]["android"];
     ASSERT_EQ(json.dump(), "{\"libVer\":\"3.170921.0\",\"tickets\":[\"1234\"],\"ver\":\"1.0\"}");
 }
+
+
+TEST(EventSerializerTest, DefaultExtensions) {
+    EventSerializer serializer;
+
+    DefaultExtensions extensions;
+    extensions.addTo(serializer);
+
+    Event testEvent ("Event Name", {{"some", "data"}}, EventFlags::LatencyRealtime | EventFlags::PersistenceCritical,
+                     {"1234"}, Event::Time(std::chrono::seconds(1528389000)));
+
+    nlohmann::json json = serializer.createEnvelopeFor(testEvent)["ext"];
+    ASSERT_TRUE(json.count("user") > 0);
+    ASSERT_TRUE(json.count("os") > 0);
+    ASSERT_TRUE(json.count("device") > 0);
+    ASSERT_TRUE(json.count("android") > 0);
+}
