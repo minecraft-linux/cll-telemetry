@@ -49,11 +49,11 @@ public:
 
     MergedBufferedEventList(std::unique_ptr<BatchedEventList> wrapped, std::unique_ptr<BatchedEventList> mem) :
             BufferedEventList(Type::Merged), wrapped(std::move(wrapped)), mem(std::move(mem)) {
-        size_t ws = wrapped->getDataSize();
-        size_t ms = mem->getDataSize();
+        size_t ws = this->wrapped->getDataSize();
+        size_t ms = this->mem->getDataSize();
         data.resize(ws + ms);
-        memcpy(data.data(), wrapped->getData(), ws);
-        memcpy(&data.data()[ws], mem->getData(), ms);
+        memcpy(data.data(), this->wrapped->getData(), ws);
+        memcpy(&data.data()[ws], this->mem->getData(), ms);
     }
 
     const char* getData() const override {

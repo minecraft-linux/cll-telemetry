@@ -15,6 +15,8 @@ private:
     std::unique_ptr<EventBatch> wrapped;
     MemoryEventBatch mem;
 
+    void flushInternal();
+
 public:
     BufferedEventBatch(std::unique_ptr<EventBatch> wrapped, size_t bufferedItemCount) :
             wrapped(std::move(wrapped)), mem(bufferedItemCount) {}
