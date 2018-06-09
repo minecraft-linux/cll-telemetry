@@ -38,6 +38,43 @@ TEST_F(FileEventBatchTest, ItemCountTest) {
     ASSERT_EQ(batch.getEventCount(), 0);
 }
 
+TEST_F(FileEventBatchTest, CountLimitTest) {
+    nlohmann::json event = {{"test", "This is a test log entry"}};
+
+    batch.setLimit(2, 2048);
+
+    for (int i = 0; i < 2; i++)
+        ASSERT_TRUE(batch.addEvent(event));
+
+    ASSERT_FALSE(batch.addEvent(event));
+
+    auto evs = batch.getEventsForUpload(1, 128 * 8);
+    ASSERT_NE(evs, nullptr);
+    batch.onEventsUploaded(*evs);
+
+    ASSERT_TRUE(batch.addEvent(event));
+    ASSERT_FALSE(batch.addEvent(event));
+}
+
+TEST_F(FileEventBatchTest, SizeLimitTest) {
+    nlohmann::json event = {{"test", "This is a test log entry"}};
+    size_t eventSize = event.dump().size();
+
+    batch.setLimit(3, (eventSize + 2) * 2);
+
+    for (int i = 0; i < 2; i++)
+        ASSERT_TRUE(batch.addEvent(event));
+
+    ASSERT_FALSE(batch.addEvent(event));
+
+    auto evs = batch.getEventsForUpload(1, 128 * 8);
+    ASSERT_NE(evs, nullptr);
+    batch.onEventsUploaded(*evs);
+
+    ASSERT_TRUE(batch.addEvent(event));
+    ASSERT_FALSE(batch.addEvent(event));
+}
+
 TEST(FileEventBatchCustomTest, PersistenceTest) {
     nlohmann::json event = {{"test", "This is a test log entry"}};
     auto eventStr = event.dump();
