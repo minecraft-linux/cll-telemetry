@@ -3,6 +3,7 @@
 
 #include <cstring>
 #include <sstream>
+#include <unistd.h>
 
 using namespace cll::http;
 
@@ -55,8 +56,20 @@ size_t CurlHttpRequest::curlOutputHandler(void* ptr, size_t size, size_t nmemb, 
     return size * nmemb;
 }
 
+int CurlHttpRequest::curlDebugCallback(CURL* handle, curl_infotype type, char* data, size_t size, void* userptr) {
+    if (type == CURLINFO_HEADER_IN || type == CURLINFO_HEADER_OUT ||
+            type == CURLINFO_DATA_IN || type == CURLINFO_DATA_OUT || type == CURLINFO_TEXT)
+        write(2, data, size);
+    return 0;
+}
+
 HttpResponse CurlHttpRequest::send() {
     HttpResponse response;
+
+#ifdef CLL_DEBUG_NETWORK
+    curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, curlDebugCallback);
+    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+#endif
 
     curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, curlHeaderHandler);
     curl_easy_setopt(curl, CURLOPT_HEADERDATA, &response);

@@ -17,6 +17,8 @@ private:
 
     static size_t curlOutputHandler(void* ptr, size_t size, size_t nmemb, std::ostream* s);
 
+    static int curlDebugCallback(CURL* handle, curl_infotype type, char *data, size_t size, void* userptr);
+
 public:
     CurlHttpRequest();
 
