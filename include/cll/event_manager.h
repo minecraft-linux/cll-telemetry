@@ -42,14 +42,39 @@ public:
      */
     EventManager(std::string const& iKey, std::string const& batchesDir, std::string const& cacheDir);
 
+    /**
+     * Gets the currently used instrumentation key, as passed in the constructor
+     * @return the instrumentation key
+     */
+    inline std::string const& getIKey() const { return iKey; }
+
     /***
      * Adds an EventUploader step, which allows you to add custom authentication headers to the requests.
      * @param step the step to add
      */
-    void addUploadStep(std::unique_ptr<EventUploadStep> step) { uploader.addStep(std::move(step)); }
+    void addUploadStep(std::unique_ptr<EventUploadStep> step) {
+        uploader.addStep(std::move(step));
+    }
 
-    inline std::string const& getIKey() const { return iKey; }
+    /**
+     * Sets the application id and version, which will be included in the uploaded events.
+     * @param appId application id in the format of 'T:name', eg. 'A:com.package.name' for an Android app
+     * @param appVer the application version string
+     */
+    void setApp(std::string appId, std::string appVer) {
+        serializer.setApp(std::move(appId), std::move(appVer));
+    }
 
+    /**
+     * Starts the event upload threads as needed. No setters should be called after this is called.
+     */
+    void start();
+
+
+    /**
+     * Adds an event to upload
+     * @param event the event to add
+     */
     void add(Event event);
 
 };

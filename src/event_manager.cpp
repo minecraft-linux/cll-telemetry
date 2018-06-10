@@ -33,7 +33,9 @@ EventManager::EventManager(std::string const& iKey, std::string const& batchesDi
     realtimeUploadTask = std::unique_ptr<TaskWithDelayThread>(new TaskWithDelayThread(
             std::chrono::milliseconds(50),
             std::bind(&EventManager::uploadRealtimeTasks, this)));
+}
 
+void EventManager::start() {
     if (normalStorageBatch->hasEvents() || criticalStorageBatch->hasEvents())
         mainUploadTask->requestRun(true);
 }
