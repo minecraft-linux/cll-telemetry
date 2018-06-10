@@ -12,8 +12,7 @@ EventUploadStatus EventUploader::sendEvents(BatchedEventList& batch, bool canRet
     req->setMethod(HttpMethod::POST);
     req->setPostData(batch.getData(), batch.getDataSize());
 
-    EventUploadRequest userReq;
-    userReq.batch = batch;
+    EventUploadRequest userReq (batch);
     for (auto const& h : steps)
         h->onRequest(userReq);
     for (auto const& h : userReq.headers)
