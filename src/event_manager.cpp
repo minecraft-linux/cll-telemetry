@@ -13,6 +13,7 @@ EventManager::EventManager(std::string const& iKey, std::string const& batchesDi
     config.addUpdateCallback(std::bind(&EventManager::onConfigurationUpdated, this));
 
     serializer.setIKey(iKey);
+    defaultSerializerExtensions.addTo(serializer);
 
     uploaderMaxSize.store((size_t) config.getMaxEventSizeInBytes());
     uploaderMaxEvents.store((size_t) config.getMaxEventsPerPost());

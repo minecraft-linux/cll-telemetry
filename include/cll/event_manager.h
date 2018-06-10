@@ -4,6 +4,7 @@
 #include "event.h"
 #include "event_uploader.h"
 #include "event_serializer.h"
+#include "event_serializer_extensions.h"
 #include "configuration_manager.h"
 #include "task_with_delay_thread.h"
 #include "memory_event_batch.h"
@@ -21,6 +22,7 @@ private:
     std::atomic<size_t> uploaderMaxEvents, uploaderMaxSize;
     EventUploader uploader;
     EventSerializer serializer;
+    DefaultExtensions defaultSerializerExtensions;
     std::unique_ptr<EventBatch> normalStorageBatch, criticalStorageBatch;
     MemoryEventBatch realtimeMemoryBatch;
     std::unique_ptr<TaskWithDelayThread> mainUploadTask, realtimeUploadTask;
@@ -39,6 +41,12 @@ public:
      * @param cacheDir the directory where cached information will be stored
      */
     EventManager(std::string const& iKey, std::string const& batchesDir, std::string const& cacheDir);
+
+    /***
+     * Adds an EventUploader step, which allows you to add custom authentication headers to the requests.
+     * @param step the step to add
+     */
+    void addUploadStep(std::unique_ptr<EventUploadStep> step) { uploader.addStep(std::move(step)); }
 
     inline std::string const& getIKey() const { return iKey; }
 
