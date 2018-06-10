@@ -60,7 +60,7 @@ void EventManager::uploadTasks() {
     const std::chrono::milliseconds baseBackoffTime (std::chrono::seconds(5));
     std::chrono::milliseconds nextBackoffTime = baseBackoffTime;
     updateConfigIfNeeded();
-    while (normalStorageBatch->hasEvents() || criticalStorageBatch->hasEvents()) {
+    while (!mainUploadTask->isStopping() && (normalStorageBatch->hasEvents() || criticalStorageBatch->hasEvents())) {
         updateConfigIfNeeded();
         EventUploadStatus status;
         if (criticalStorageBatch->hasEvents())
@@ -74,9 +74,9 @@ void EventManager::uploadTasks() {
         if (status)
             continue;
         if (status.state == EventUploadStatus::State::ErrorRateLimit) {
-            std::this_thread::sleep_for(status.retryAfter);
+            TaskWithDelayThread::sleep(status.retryAfter);
         } else {
-            std::this_thread::sleep_for(nextBackoffTime);
+            TaskWithDelayThread::sleep(nextBackoffTime);
             nextBackoffTime *= 2;
         }
     }

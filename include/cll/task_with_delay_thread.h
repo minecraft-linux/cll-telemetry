@@ -17,13 +17,24 @@ private:
     std::chrono::nanoseconds delay;
     std::function<void ()> function;
     std::thread thread;
-    std::mutex mutex;
+    mutable std::mutex mutex;
     std::condition_variable cv;
     bool running = false, hasPendingTask = false, runImmediately = false;
+    bool stopping = false;
+
+    static thread_local std::condition_variable* currentCondVar;
+    static thread_local std::unique_lock<std::mutex>* currentLock;
 
     void doThreadLoop();
 
 public:
+    template <typename T>
+    static void sleep(T time) {
+        currentLock->lock();
+        currentCondVar->wait_for(*currentLock, time);
+        currentLock->unlock();
+    }
+
     template <typename Rep, typename Period>
     explicit TaskWithDelayThread(std::chrono::duration<Rep, Period> delay, std::function<void ()> function) :
             function(std::move(function)) {
@@ -31,6 +42,11 @@ public:
     }
 
     ~TaskWithDelayThread();
+
+    bool isStopping() const {
+        std::lock_guard<std::mutex> lock(mutex);
+        return stopping;
+    }
 
     void requestRun(bool immediate = false);
 
