@@ -2,11 +2,12 @@
 
 #include <string>
 #include <curl/curl.h>
-#include "cll/http/http_response.h"
+#include <cll/http/http_error.h>
 
 namespace cll {
+namespace http {
 
-class CurlError : public std::exception {
+class CurlError : public HttpError {
 
 private:
     CURLcode _code;
@@ -25,4 +26,5 @@ public:
 
 };
 
+}
 }
