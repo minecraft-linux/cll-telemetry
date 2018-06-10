@@ -42,7 +42,7 @@ class EventUploader {
 private:
     http::HttpClient& client;
     std::string url;
-    std::vector<std::unique_ptr<EventUploadStep>> steps;
+    std::vector<EventUploadStep*> steps;
 
     static std::string getUploadTimestamp(
             std::chrono::system_clock::time_point time = std::chrono::system_clock::now());
@@ -55,8 +55,8 @@ public:
 
     EventUploadStatus sendEvents(EventBatch& batch, size_t maxCount, size_t maxSize);
 
-    void addStep(std::unique_ptr<EventUploadStep> step) {
-        steps.push_back(std::move(step));
+    void addStep(EventUploadStep& step) {
+        steps.push_back(&step);
     }
 
 };

@@ -52,8 +52,8 @@ public:
      * Adds an EventUploader step, which allows you to add custom authentication headers to the requests.
      * @param step the step to add
      */
-    void addUploadStep(std::unique_ptr<EventUploadStep> step) {
-        uploader.addStep(std::move(step));
+    void addUploadStep(EventUploadStep& step) {
+        uploader.addStep(step);
     }
 
     /**
