@@ -3,7 +3,7 @@
 #include <log.h>
 #include <cll/configuration_cache.h>
 #include <cll/http/http_error.h>
-#include "http/curl_request.h"
+#include <cll/http/http_client.h>
 #include "json_utils.h"
 
 using namespace cll;
@@ -24,13 +24,13 @@ void Configuration::applyFromJson(nlohmann::json const& json) {
     queueDrainInterval.set(json, "QUEUEDRAININTERVAL");
 }
 
-bool Configuration::download(ConfigurationCache* cache) {
+bool Configuration::download(HttpClient& client, ConfigurationCache* cache) {
     Log::trace("Configuration", "Downloading configuration from: %s", url.c_str());
 
     auto requestStart = std::chrono::system_clock::now();
 
-    CurlHttpRequest request;
-    request.setUrl(url);
+    std::unique_ptr<HttpRequest> request (client.createRequest());
+    request->setUrl(url);
 
     CachedConfiguration cached;
     bool hasCached = false;
@@ -42,11 +42,11 @@ bool Configuration::download(ConfigurationCache* cache) {
     }
 
     if (hasCached)
-        request.addHeader("If-None-Match", "\"" + cached.etag + "\"");
+        request->addHeader("If-None-Match", "\"" + cached.etag + "\"");
 
     HttpResponse response;
     try {
-        response = request.send();
+        response = request->send();
     } catch (HttpError& error) {
         Log::warn("Configuration", "Failed to download configuration: %s", error.what());
     }

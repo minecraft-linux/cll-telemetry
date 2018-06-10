@@ -7,6 +7,7 @@
 #include "configuration_manager.h"
 #include "task_with_delay_thread.h"
 #include "memory_event_batch.h"
+#include "http/http_client.h"
 
 namespace cll {
 
@@ -14,6 +15,7 @@ class EventManager {
 
 private:
     std::string iKey;
+    std::unique_ptr<http::HttpClient> httpClient;
     ConfigurationManager config;
     std::mutex configUpdateMutex;
     std::atomic<size_t> uploaderMaxEvents, uploaderMaxSize;

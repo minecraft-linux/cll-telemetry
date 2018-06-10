@@ -7,6 +7,8 @@
 
 namespace cll {
 
+namespace http { class HttpClient; }
+
 class ConfigurationManager {
 
 private:
@@ -66,11 +68,11 @@ public:
         return true;
     }
 
-    void downloadConfigs() {
+    void downloadConfigs(http::HttpClient& client) {
         bool downloadedAnything = false;
         for (auto const& config : configurations) {
             if (config->needsRedownload()) {
-                config->download(cache.get());
+                config->download(client, cache.get());
                 downloadedAnything = true;
             }
         }

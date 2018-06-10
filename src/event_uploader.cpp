@@ -1,26 +1,26 @@
 #include <cll/event_uploader.h>
 #include <log.h>
 #include <cll/http/http_error.h>
-#include "http/curl_request.h"
+#include <cll/http/http_client.h>
 
 using namespace cll;
 using namespace cll::http;
 
 EventUploadStatus EventUploader::sendEvents(BatchedEventList& batch, bool canRetry) {
-    CurlHttpRequest req;
-    req.setUrl(url);
-    req.setMethod(HttpMethod::POST);
-    req.setPostData(batch.getData(), batch.getDataSize());
+    auto req = client.createRequest();
+    req->setUrl(url);
+    req->setMethod(HttpMethod::POST);
+    req->setPostData(batch.getData(), batch.getDataSize());
 
     EventUploadRequest userReq;
     for (auto const& h : steps)
         h->onRequest(userReq);
     for (auto const& h : userReq.headers)
-        req.addHeader(h.first, h.second);
+        req->addHeader(h.first, h.second);
 
     HttpResponse res;
     try {
-        res = req.send();
+        res = req->send();
     } catch (HttpError& err) {
         return EventUploadStatus::error();
     }

@@ -8,6 +8,8 @@
 
 namespace cll {
 
+namespace http { class HttpClient; }
+
 struct EventUploadStatus {
 
     enum class State {
@@ -38,11 +40,13 @@ struct EventUploadStatus {
 class EventUploader {
 
 private:
+    http::HttpClient& client;
     std::string url;
     std::vector<std::unique_ptr<EventUploadStep>> steps;
 
 public:
-    EventUploader(std::string url = "https://vortex.data.microsoft.com/collect/v1") : url(std::move(url)) {}
+    EventUploader(http::HttpClient& client, std::string url = "https://vortex.data.microsoft.com/collect/v1") :
+            client(client), url(std::move(url)) {}
 
     EventUploadStatus sendEvents(BatchedEventList& batch, bool canRetry = true);
 

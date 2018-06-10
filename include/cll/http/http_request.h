@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <curl/curl.h>
+#include <functional>
 #include "http_response.h"
 
 namespace cll {

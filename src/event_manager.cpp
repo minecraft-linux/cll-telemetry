@@ -7,7 +7,7 @@
 using namespace cll;
 
 EventManager::EventManager(std::string const& iKey, std::string const& batchesDir, std::string const& cacheDir)
-        : iKey(iKey) {
+        : iKey(iKey), httpClient(http::HttpClient::createPlatformClient()), uploader(*httpClient) {
     config.setCache(std::unique_ptr<ConfigurationCache>(new FileConfigurationCache(cacheDir + "/config_cache.json")));
     config.addDefaultConfigurations(iKey);
     config.addUpdateCallback(std::bind(&EventManager::onConfigurationUpdated, this));
@@ -39,7 +39,7 @@ EventManager::EventManager(std::string const& iKey, std::string const& batchesDi
 
 void EventManager::updateConfigIfNeeded() {
     std::lock_guard<std::mutex> lock (configUpdateMutex);
-    config.downloadConfigs();
+    config.downloadConfigs(*httpClient);
 }
 
 void EventManager::onConfigurationUpdated() {

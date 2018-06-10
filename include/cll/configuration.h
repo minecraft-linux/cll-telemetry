@@ -7,6 +7,7 @@ namespace cll {
 
 class ConfigurationCache;
 class CachedConfiguration;
+namespace http { class HttpClient; }
 
 template <typename T>
 class ConfigurationProperty {
@@ -50,7 +51,7 @@ public:
 
     explicit Configuration(std::string url) : url(std::move(url)) {}
 
-    bool download(ConfigurationCache* cache);
+    bool download(http::HttpClient& client, ConfigurationCache* cache);
 
     bool needsRedownload() const {
         return !downloaded ||
