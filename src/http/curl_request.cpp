@@ -1,26 +1,26 @@
-#include "http_request.h"
+#include "curl_request.h"
 #include "curl_error.h"
 
 #include <cstring>
 #include <sstream>
 
-using namespace cll;
+using namespace cll::http;
 
-HttpRequest::HttpRequest() {
+CurlHttpRequest::CurlHttpRequest() {
     curl = curl_easy_init();
 }
 
-HttpRequest::~HttpRequest() {
+CurlHttpRequest::~CurlHttpRequest() {
     if (headers != nullptr)
         curl_slist_free_all(headers);
     curl_easy_cleanup(curl);
 }
 
-void HttpRequest::setUrl(std::string const& url) {
+void CurlHttpRequest::setUrl(std::string const& url) {
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 }
 
-void HttpRequest::setMethod(HttpMethod method) {
+void CurlHttpRequest::setMethod(HttpMethod method) {
     switch (method) {
         case HttpMethod::GET:
             curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
@@ -31,17 +31,17 @@ void HttpRequest::setMethod(HttpMethod method) {
     }
 }
 
-void HttpRequest::setPostData(const char* data, size_t size) {
+void CurlHttpRequest::setPostData(const char* data, size_t size) {
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long) size);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
 }
 
-void HttpRequest::addHeader(std::string const& name, std::string const& value) {
+void CurlHttpRequest::addHeader(std::string const& name, std::string const& value) {
     headers = curl_slist_append(headers, (name + ": " + value).c_str());
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 }
 
-size_t HttpRequest::curlHeaderHandler(char* buffer, size_t size, size_t nitems, HttpResponse* data) {
+size_t CurlHttpRequest::curlHeaderHandler(char* buffer, size_t size, size_t nitems, HttpResponse* data) {
     char* ptr = (char*) memchr(buffer, ':', size * nitems);
     if (ptr != nullptr) {
         size_t iof = ptr - buffer;
@@ -50,12 +50,12 @@ size_t HttpRequest::curlHeaderHandler(char* buffer, size_t size, size_t nitems, 
     return nitems * size;
 }
 
-size_t HttpRequest::curlOutputHandler(void* ptr, size_t size, size_t nmemb, std::ostream* s) {
+size_t CurlHttpRequest::curlOutputHandler(void* ptr, size_t size, size_t nmemb, std::ostream* s) {
     s->write((char*) ptr, size * nmemb);
     return size * nmemb;
 }
 
-HttpResponse HttpRequest::send() {
+HttpResponse CurlHttpRequest::send() {
     HttpResponse response;
 
     curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, curlHeaderHandler);

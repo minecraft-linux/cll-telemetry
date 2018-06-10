@@ -4,6 +4,7 @@
 #include <vector>
 
 namespace cll {
+namespace http {
 
 struct HttpResponse {
 
@@ -22,4 +23,5 @@ struct HttpResponse {
 
 };
 
+}
 }

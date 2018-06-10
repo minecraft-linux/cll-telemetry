@@ -2,7 +2,7 @@
 
 #include <string>
 #include <curl/curl.h>
-#include "http_response.h"
+#include "cll/http/http_response.h"
 
 namespace cll {
 

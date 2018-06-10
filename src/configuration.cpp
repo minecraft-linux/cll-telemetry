@@ -2,11 +2,12 @@
 
 #include <log.h>
 #include <cll/configuration_cache.h>
-#include "http/http_request.h"
+#include <cll/http/http_error.h>
+#include "http/curl_request.h"
 #include "json_utils.h"
-#include "http/curl_error.h"
 
 using namespace cll;
+using namespace cll::http;
 
 template <>
 void ConfigurationProperty<int>::set(nlohmann::json const& json, std::string const& name) {
@@ -28,7 +29,7 @@ bool Configuration::download(ConfigurationCache* cache) {
 
     auto requestStart = std::chrono::system_clock::now();
 
-    HttpRequest request;
+    CurlHttpRequest request;
     request.setUrl(url);
 
     CachedConfiguration cached;
@@ -46,7 +47,7 @@ bool Configuration::download(ConfigurationCache* cache) {
     HttpResponse response;
     try {
         response = request.send();
-    } catch (CurlError& error) {
+    } catch (HttpError& error) {
         Log::warn("Configuration", "Failed to download configuration: %s", error.what());
     }
 

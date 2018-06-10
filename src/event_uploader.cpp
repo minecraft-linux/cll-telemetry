@@ -1,12 +1,13 @@
 #include <cll/event_uploader.h>
 #include <log.h>
-#include "http/http_request.h"
-#include "http/curl_error.h"
+#include <cll/http/http_error.h>
+#include "http/curl_request.h"
 
 using namespace cll;
+using namespace cll::http;
 
 EventUploadStatus EventUploader::sendEvents(BatchedEventList& batch, bool canRetry) {
-    HttpRequest req;
+    CurlHttpRequest req;
     req.setUrl(url);
     req.setMethod(HttpMethod::POST);
     req.setPostData(batch.getData(), batch.getDataSize());
@@ -20,7 +21,7 @@ EventUploadStatus EventUploader::sendEvents(BatchedEventList& batch, bool canRet
     HttpResponse res;
     try {
         res = req.send();
-    } catch (CurlError& err) {
+    } catch (HttpError& err) {
         return EventUploadStatus::error();
     }
 
