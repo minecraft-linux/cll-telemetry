@@ -20,13 +20,13 @@ EventManager::EventManager(std::string const& iKey, std::string const& batchesDi
     uploaderMaxEvents.store((size_t) config.getMaxEventsPerPost());
 
     normalStorageBatch = std::unique_ptr<EventBatch>(new MultiFileEventBatch(
-            batchesDir, "normal", ".txt", (size_t) config.getMaxEventSizeInBytes(),
-            (size_t) config.getMaxEventsPerPost()));
+            batchesDir, "normal", ".txt", (size_t) config.getMaxEventsPerPost(),
+            (size_t) config.getMaxEventSizeInBytes()));
     normalStorageBatch = std::unique_ptr<EventBatch>(new BufferedEventBatch(std::move(normalStorageBatch), 50));
 
     criticalStorageBatch = std::unique_ptr<EventBatch>(new MultiFileEventBatch(
-            batchesDir, "crit", ".txt", (size_t) config.getMaxEventSizeInBytes(),
-            (size_t) config.getMaxEventsPerPost()));
+            batchesDir, "crit", ".txt", (size_t) config.getMaxEventsPerPost(),
+            (size_t) config.getMaxEventSizeInBytes()));
 
     mainUploadTask = std::unique_ptr<TaskWithDelayThread>(new TaskWithDelayThread(
             std::chrono::minutes(config.getQueueDrainInterval()),
@@ -49,9 +49,9 @@ void EventManager::updateConfigIfNeeded() {
 
 void EventManager::onConfigurationUpdated() {
     ((MultiFileEventBatch&) *((BufferedEventBatch&) *normalStorageBatch).getWrapped()).setFileLimits(
-            (size_t) config.getMaxEventSizeInBytes(), (size_t) config.getMaxEventsPerPost());
+            (size_t) config.getMaxEventsPerPost(), (size_t) config.getMaxEventSizeInBytes());
     ((MultiFileEventBatch&) *criticalStorageBatch).setFileLimits(
-            (size_t) config.getMaxEventSizeInBytes(), (size_t) config.getMaxEventsPerPost());
+            (size_t) config.getMaxEventsPerPost(), (size_t) config.getMaxEventSizeInBytes());
     uploaderMaxSize.store((size_t) config.getMaxEventSizeInBytes());
     uploaderMaxEvents.store((size_t) config.getMaxEventsPerPost());
 }

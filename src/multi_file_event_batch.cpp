@@ -3,10 +3,10 @@
 
 using namespace cll;
 
-MultiFileEventBatch::MultiFileEventBatch(std::string path, std::string prefix, std::string suffix, size_t fileMaxSize,
-                                         size_t fileMaxEvents) :
-        path(std::move(path)), prefix(std::move(prefix)), suffix(std::move(suffix)), fileMaxSize(fileMaxSize),
-        fileMaxEvents(fileMaxEvents) {
+MultiFileEventBatch::MultiFileEventBatch(std::string path, std::string prefix, std::string suffix, size_t fileMaxEvents,
+                                         size_t fileMaxSize) :
+        path(std::move(path)), prefix(std::move(prefix)), suffix(std::move(suffix)), fileMaxEvents(fileMaxEvents),
+        fileMaxSize(fileMaxSize) {
     if (this->path.length() > 0 && this->path[this->path.length() - 1] != '/')
         this->path = this->path + '/';
     oldBatches = getBatches();
@@ -128,11 +128,11 @@ bool MultiFileEventBatch::hasEvents() const {
     return !oldBatches.empty() || oldestBatch != nullptr || newestBatch->hasEvents();
 }
 
-void MultiFileEventBatch::setFileLimits(size_t maxSize, size_t maxEvents) {
+void MultiFileEventBatch::setFileLimits(size_t maxEvents, size_t maxSize) {
     std::lock_guard<std::mutex> l (batchPointerMutex);
     fileMaxSize = maxSize;
     fileMaxEvents = maxEvents;
     if (oldestBatch)
-        oldestBatch->setLimit(maxSize, maxEvents);
-    newestBatch->setLimit(maxSize, maxEvents);
+        oldestBatch->setLimit(maxEvents, maxSize);
+    newestBatch->setLimit(maxEvents, maxSize);
 }

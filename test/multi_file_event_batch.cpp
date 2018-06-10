@@ -29,13 +29,13 @@ public:
 
 TEST_F(MultiFileEventBatchTest, BasicTest) {
     mkdir("multifile_test", 0700);
-    batch = std::unique_ptr<MultiFileEventBatch>(new MultiFileEventBatch("multifile_test", "events", ".txt", 1024, 2));
+    batch = std::unique_ptr<MultiFileEventBatch>(new MultiFileEventBatch("multifile_test", "events", ".txt", 2, 1024));
     EventBatchTest::BasicTest(*batch);
 }
 
 TEST_F(MultiFileEventBatchTest, ReadIncrementalWithRemoval) {
     mkdir("multifile_test", 0700);
-    batch = std::unique_ptr<MultiFileEventBatch>(new MultiFileEventBatch("multifile_test", "events", ".txt", 320, 10));
+    batch = std::unique_ptr<MultiFileEventBatch>(new MultiFileEventBatch("multifile_test", "events", ".txt", 10, 320));
     EventBatchTest::SetUpTestEvents(*batch);
     EventBatchTest::ReadIncrementalWithRemoval(*batch);
 }

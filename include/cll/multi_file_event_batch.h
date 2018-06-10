@@ -44,7 +44,7 @@ private:
 
 public:
     MultiFileEventBatch(std::string path, std::string prefix, std::string suffix,
-                        size_t fileMaxSize, size_t fileMaxEvents);
+                        size_t fileMaxEvents, size_t fileMaxSize);
 
     void setFileLimits(size_t maxSize, size_t maxEvents);
 
