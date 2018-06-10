@@ -72,14 +72,19 @@ public:
         bool downloadedAnything = false;
         for (auto const& config : configurations) {
             if (config->needsRedownload()) {
-                config->download(client, cache.get());
-                downloadedAnything = true;
+                if (config->download(client, cache.get()))
+                    downloadedAnything = true;
             }
         }
         if (downloadedAnything) {
             for (auto const& c : updateCallbacks)
                 c();
         }
+    }
+
+    void loadCachedConfigs() {
+        for (auto const& config : configurations)
+            config->loadFromCache(cache.get());
     }
 
 };

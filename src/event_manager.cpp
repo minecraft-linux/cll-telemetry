@@ -11,6 +11,7 @@ EventManager::EventManager(std::string const& iKey, std::string const& batchesDi
     config.setCache(std::unique_ptr<ConfigurationCache>(new FileConfigurationCache(cacheDir + "/config_cache.json")));
     config.addDefaultConfigurations(iKey);
     config.addUpdateCallback(std::bind(&EventManager::onConfigurationUpdated, this));
+    config.loadCachedConfigs();
 
     serializer.setIKey(iKey);
     defaultSerializerExtensions.addTo(serializer);
@@ -33,11 +34,12 @@ EventManager::EventManager(std::string const& iKey, std::string const& batchesDi
     realtimeUploadTask = std::unique_ptr<TaskWithDelayThread>(new TaskWithDelayThread(
             std::chrono::milliseconds(50),
             std::bind(&EventManager::uploadRealtimeTasks, this)));
+
+    updateConfigIfNeeded();
 }
 
 void EventManager::start() {
-    if (normalStorageBatch->hasEvents() || criticalStorageBatch->hasEvents())
-        mainUploadTask->requestRun(true);
+    mainUploadTask->requestRun(true);
 }
 
 void EventManager::updateConfigIfNeeded() {
@@ -57,6 +59,7 @@ void EventManager::onConfigurationUpdated() {
 void EventManager::uploadTasks() {
     const std::chrono::milliseconds baseBackoffTime (std::chrono::seconds(5));
     std::chrono::milliseconds nextBackoffTime = baseBackoffTime;
+    updateConfigIfNeeded();
     while (normalStorageBatch->hasEvents() || criticalStorageBatch->hasEvents()) {
         updateConfigIfNeeded();
         EventUploadStatus status;

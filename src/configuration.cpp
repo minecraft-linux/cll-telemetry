@@ -24,6 +24,15 @@ void Configuration::applyFromJson(nlohmann::json const& json) {
     queueDrainInterval.set(json, "QUEUEDRAININTERVAL");
 }
 
+bool Configuration::loadFromCache(ConfigurationCache* cache) {
+    CachedConfiguration cached;
+    if (cache->readFromCache(url, cached)) {
+        importCached(cached);
+        return true;
+    }
+    return false;
+}
+
 bool Configuration::download(HttpClient& client, ConfigurationCache* cache) {
     Log::trace("Configuration", "Downloading configuration from: %s", url.c_str());
 

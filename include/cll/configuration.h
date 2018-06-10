@@ -14,7 +14,7 @@ class ConfigurationProperty {
 
 private:
     T value;
-    bool valueSet;
+    bool valueSet = false;
 
 public:
     void reset() {
@@ -52,6 +52,8 @@ public:
     explicit Configuration(std::string url) : url(std::move(url)) {}
 
     bool download(http::HttpClient& client, ConfigurationCache* cache);
+
+    bool loadFromCache(ConfigurationCache* cache);
 
     bool needsRedownload() const {
         return !downloaded ||
