@@ -10,6 +10,7 @@ class Configuration;
 
 struct CachedConfiguration {
     std::chrono::system_clock::time_point expires;
+    std::chrono::seconds refreshInterval;
     std::string etag;
     nlohmann::json data;
 };

@@ -55,7 +55,8 @@ bool Configuration::download(HttpClient& client, ConfigurationCache* cache) {
         nlohmann::json val = safeParseJson(response.body);
 
         auto settings = val["settings"];
-        cached.expires = requestStart + std::chrono::minutes(JsonUtils::asInt(val["refreshInterval"]));
+        cached.refreshInterval = std::chrono::minutes(JsonUtils::asInt(val["refreshInterval"]));
+        cached.expires = requestStart + cached.refreshInterval;
         cached.data = settings;
         cached.etag = response.findHeader("ETag");
         applyFromJson(settings);
@@ -65,7 +66,10 @@ bool Configuration::download(HttpClient& client, ConfigurationCache* cache) {
             cache->writeConfigToCache(url, cached);
         return true;
     } else if (response.status == 304) { // cached
+        cached.expires = requestStart + cached.refreshInterval;
         importCached(cached);
+        if (cache)
+            cache->writeConfigToCache(url, cached);
         return true;
     }
     Log::warn("Configuration", "Failed to download configuration: status code %li", response.status);
