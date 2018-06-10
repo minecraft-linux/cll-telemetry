@@ -13,6 +13,7 @@ void TaskWithDelayThread::doThreadLoop() {
         function();
         lock.lock();
     }
+    running = false;
 }
 
 TaskWithDelayThread::~TaskWithDelayThread() {
@@ -20,7 +21,8 @@ TaskWithDelayThread::~TaskWithDelayThread() {
     runImmediately = true;
     lock.unlock();
     cv.notify_all();
-    thread.join();
+    if (thread.joinable())
+        thread.join();
 }
 
 void TaskWithDelayThread::requestRun(bool immediate) {
@@ -30,6 +32,8 @@ void TaskWithDelayThread::requestRun(bool immediate) {
         runImmediately = true;
     if (!running) {
         running = true;
+        if (thread.joinable())
+            thread.join();
         thread = std::thread(std::bind(&TaskWithDelayThread::doThreadLoop, this));
     } else if (immediate) {
         lock.unlock();
