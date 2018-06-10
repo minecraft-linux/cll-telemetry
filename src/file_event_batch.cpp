@@ -136,9 +136,13 @@ void FileEventBatch::onEventsUploaded(BatchedEventList& events) {
     if (fileSize == events.getDataSize()) {
         fileSize = 0;
         eventCount = 0;
-        close(fd);
-        fd = -1;
-        remove(path.c_str());
+        if (finalized) {
+            close(fd);
+            fd = -1;
+            remove(path.c_str());
+        } else {
+            ftruncate(fd, 0);
+        }
         return;
     }
     int fdIn = open(path.c_str(), O_RDONLY);
