@@ -97,7 +97,7 @@ void EventManager::uploadRealtimeTasks() {
     }
 }
 
-void EventManager::add(Event event) {
+void EventManager::add(Event const& event) {
     auto serialized = serializer.createEnvelopeFor(event);
     bool realtime = false;
     if (EventFlagSet(event.getFlags(), EventFlags::LatencyRealtime)) {

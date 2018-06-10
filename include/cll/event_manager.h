@@ -75,7 +75,7 @@ public:
      * Adds an event to upload
      * @param event the event to add
      */
-    void add(Event event);
+    void add(Event const& event);
 
 };
 
