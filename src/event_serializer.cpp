@@ -20,7 +20,6 @@ EventSerializer::EventSerializer() {
 std::string EventSerializer::getEventTimeAsString(std::chrono::system_clock::time_point timepoint) {
     using namespace std::chrono;
     char timestamp[32];
-    std::stringstream batch;
     time_t time = system_clock::to_time_t(timepoint);
     strftime(timestamp, sizeof(timestamp), "%FT%T", gmtime(&time));
     auto timestampLen = strlen(timestamp);

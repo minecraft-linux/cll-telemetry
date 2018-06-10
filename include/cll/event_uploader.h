@@ -44,11 +44,14 @@ private:
     std::string url;
     std::vector<std::unique_ptr<EventUploadStep>> steps;
 
+    static std::string getUploadTimestamp(
+            std::chrono::system_clock::time_point time = std::chrono::system_clock::now());
+
 public:
     EventUploader(http::HttpClient& client, std::string url = "https://vortex.data.microsoft.com/collect/v1") :
             client(client), url(std::move(url)) {}
 
-    EventUploadStatus sendEvents(BatchedEventList& batch, bool canRetry = true);
+    EventUploadStatus sendEvents(BatchedEventList& batch, bool compress = false, bool canRetry = true);
 
     EventUploadStatus sendEvents(EventBatch& batch, size_t maxCount, size_t maxSize);
 

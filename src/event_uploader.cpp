@@ -2,15 +2,28 @@
 #include <log.h>
 #include <cll/http/http_error.h>
 #include <cll/http/http_client.h>
+#include <cll/event_serializer.h>
+#include <cll/event_compressor.h>
 
 using namespace cll;
 using namespace cll::http;
 
-EventUploadStatus EventUploader::sendEvents(BatchedEventList& batch, bool canRetry) {
+EventUploadStatus EventUploader::sendEvents(BatchedEventList& batch, bool compress, bool canRetry) {
     auto req = client.createRequest();
     req->setUrl(url);
     req->setMethod(HttpMethod::POST);
-    req->setPostData(batch.getData(), batch.getDataSize());
+    req->addHeader("Content-Type", "application/x-json-stream; charset=utf-8");
+    req->addHeader("X-UploadTime", getUploadTimestamp());
+    std::string compressed;
+    if (compress) {
+        compressed = EventCompressor::compress(batch.getData(), batch.getDataSize());
+        req->setPostData(compressed.data(), compressed.size());
+        req->addHeader("Accept", "application/json");
+        req->addHeader("Accept-Encoding", "gzip, deflate");
+        req->addHeader("Content-Encoding", "deflate");
+    } else {
+        req->setPostData(batch.getData(), batch.getDataSize());
+    }
 
     EventUploadRequest userReq (batch);
     for (auto const& h : steps)
@@ -39,9 +52,21 @@ EventUploadStatus EventUploader::sendEvents(BatchedEventList& batch, bool canRet
         for (auto const& h : steps)
             retry |= h->onAuthenticationFailed();
         if (retry && canRetry)
-            return sendEvents(batch, false);
+            return sendEvents(batch, compress, false);
     }
     return EventUploadStatus::error();
+}
+
+std::string EventUploader::getUploadTimestamp(std::chrono::system_clock::time_point time) {
+    using namespace std::chrono;
+    char timestamp[64];
+    time_t timec = system_clock::to_time_t(time);
+    strftime(timestamp, sizeof(timestamp), "%FT%T", gmtime(&timec));
+    size_t timestampLen = strlen(timestamp);
+    auto timeMs = duration_cast<microseconds>(time.time_since_epoch()) -
+            duration_cast<microseconds>(duration_cast<seconds>(time.time_since_epoch()));
+    snprintf(&timestamp[timestampLen], sizeof(timestamp) - timestampLen, ".%06dZ", (int) timeMs.count());
+    return std::string(timestamp);
 }
 
 EventUploadStatus EventUploader::sendEvents(EventBatch& batch, size_t maxCount, size_t maxSize) {
@@ -58,7 +83,7 @@ EventUploadStatus EventUploader::sendEvents(EventBatch& batch, size_t maxCount, 
         }
         return EventUploadStatus::success();
     }
-    auto ret = sendEvents(*events);
+    auto ret = sendEvents(*events, events->getEventCount() > 1);
     if (ret)
         batch.onEventsUploaded(*events);
     return ret;
