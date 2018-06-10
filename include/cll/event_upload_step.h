@@ -6,7 +6,10 @@
 
 namespace cll {
 
+class BatchedEventList;
+
 struct EventUploadRequest {
+    BatchedEventList& batch;
     std::vector<std::pair<std::string, std::string>> headers;
 };
 
