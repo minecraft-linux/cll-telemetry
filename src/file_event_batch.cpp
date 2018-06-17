@@ -3,6 +3,11 @@
 #include <log.h>
 #include <fcntl.h>
 
+#ifdef __APPLE__
+#define ftruncate64 ftruncate
+#define lseek64 lseek
+#endif
+
 using namespace cll;
 
 FileEventBatch::FileEventBatch(std::string const& path) : path(path) {
