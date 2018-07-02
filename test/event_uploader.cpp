@@ -53,17 +53,17 @@ TEST(EventUploaderTest, CustomStep) {
     MockHttpClient client;
     client.addMockedResponse("http://localhost/submit", {401, {}, ""});
     EventUploader uploader (client, "http://localhost/submit");
-    CustomUploadStep* step = new CustomUploadStep();
-    uploader.addStep(std::unique_ptr<EventUploadStep>(step));
+    CustomUploadStep step;
+    uploader.addStep(step);
     const char* dataText = "This is a test event data\r\nAnd another event\r\n";
     std::vector<char> data (strlen(dataText));
     memcpy(data.data(), dataText, data.size());
     VectorBatchedEventList events (data, 2, false);
     ASSERT_FALSE(uploader.sendEvents(events));
-    ASSERT_EQ(step->timesRequestWasCalled, 2);
-    ASSERT_EQ(step->timesAuthFailureWasCalled, 2);
+    ASSERT_EQ(step.timesRequestWasCalled, 2);
+    ASSERT_EQ(step.timesAuthFailureWasCalled, 2);
     client.addMockedResponse("http://localhost/submit", {200, {}, "{\"acc\":2}"});
     ASSERT_TRUE(uploader.sendEvents(events, false));
-    ASSERT_EQ(step->timesRequestWasCalled, 3);
-    ASSERT_EQ(step->timesAuthFailureWasCalled, 2);
+    ASSERT_EQ(step.timesRequestWasCalled, 3);
+    ASSERT_EQ(step.timesAuthFailureWasCalled, 2);
 }
