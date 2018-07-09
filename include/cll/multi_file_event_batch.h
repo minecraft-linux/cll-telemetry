@@ -15,7 +15,7 @@ private:
         bool hasMoreFiles;
 
         EventList(std::unique_ptr<BatchedEventList> wrapped, bool hasMore) :
-                wrapped(std::move(wrapped)), hasMoreFiles(hasMoreFiles) {}
+                wrapped(std::move(wrapped)), hasMoreFiles(hasMore) {}
 
         const char* getData() const override { return wrapped->getData(); }
         size_t getDataSize() const override { return wrapped->getDataSize(); }
