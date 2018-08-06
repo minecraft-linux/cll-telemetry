@@ -15,7 +15,7 @@ private:
 public:
     BufferedEventList(Type type) : type(type) {}
 
-    constexpr Type getType() const { return type; }
+    inline Type getType() const { return type; }
 
 };
 

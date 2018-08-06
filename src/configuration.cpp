@@ -9,6 +9,7 @@
 using namespace cll;
 using namespace cll::http;
 
+namespace cll {
 template <>
 void ConfigurationProperty<int>::set(nlohmann::json const& json, std::string const& name) {
     auto f = json.find(name);
@@ -16,6 +17,7 @@ void ConfigurationProperty<int>::set(nlohmann::json const& json, std::string con
         reset();
     else
         set(JsonUtils::asInt(*f));
+}
 }
 
 void Configuration::applyFromJson(nlohmann::json const& json) {
