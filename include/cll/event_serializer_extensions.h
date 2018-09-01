@@ -48,6 +48,9 @@ public:
     void setLocalId(std::string const& localId) { data["localId"] = localId; }
     void clearLocalId() { data.erase("localId"); }
 
+    void setDeviceClass(std::string const& deviceClass) { data["deviceClass"] = deviceClass; }
+    void clearDeviceClass() { data.erase("deviceClass"); }
+
     std::string getName() const override { return "device"; }
     nlohmann::json build(Event const&) override { return data; }
 };

@@ -6,6 +6,7 @@ using namespace cll;
 DefaultExtensions::DefaultExtensions() {
     user.setLocalId("");
     device.setLocalId("");
+    device.setDeviceClass("Android.PC");
 }
 
 void DefaultExtensions::addTo(EventSerializer& serializer) {

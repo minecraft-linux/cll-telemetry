@@ -31,8 +31,9 @@ std::string EventSerializer::getEventTimeAsString(std::chrono::system_clock::tim
 
 nlohmann::json EventSerializer::createEnvelopeFor(Event const& ev) {
     nlohmann::json envelope;
-    envelope["ver"] = "2.1.0";
+    envelope["ver"] = "2.1";
     envelope["name"] = ev.getName();
+    envelope["data"] = ev.getData();
     envelope["time"] = getEventTimeAsString(ev.getTime());
     envelope["popSample"] = 100.0; // TODO: Implement sample rates
     envelope["epoch"] = std::to_string(epoch);
