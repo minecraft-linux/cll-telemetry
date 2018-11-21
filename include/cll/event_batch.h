@@ -7,6 +7,7 @@ namespace cll {
 class BatchedEventList {
 
 public:
+    virtual ~BatchedEventList() = default;
     virtual const char* getData() const = 0;
     virtual size_t getDataSize() const = 0;
     virtual size_t getEventCount() const = 0;
@@ -17,6 +18,8 @@ public:
 class EventBatch {
 
 public:
+    virtual ~EventBatch() = default;
+
     virtual bool addEvent(nlohmann::json const& rawData) = 0;
 
     virtual std::unique_ptr<BatchedEventList> getEventsForUpload(size_t maxCount, size_t maxSize) = 0;

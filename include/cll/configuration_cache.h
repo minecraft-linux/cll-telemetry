@@ -18,6 +18,7 @@ struct CachedConfiguration {
 class ConfigurationCache {
 
 public:
+    virtual ~ConfigurationCache() = default;
     virtual bool readFromCache(std::string const& url, CachedConfiguration& config) = 0;
     virtual void writeConfigToCache(std::string const& url, CachedConfiguration const& config) = 0;
 
