@@ -23,6 +23,7 @@ private:
     bool stopping = false;
 
     static thread_local std::condition_variable* currentCondVar;
+    static thread_local bool* currentIsStopping;
     static thread_local std::unique_lock<std::mutex>* currentLock;
 
     void doThreadLoop();
@@ -31,7 +32,8 @@ public:
     template <typename T>
     static void sleep(T time) {
         currentLock->lock();
-        currentCondVar->wait_for(*currentLock, time);
+        if (!currentIsStopping)
+            currentCondVar->wait_for(*currentLock, time);
         currentLock->unlock();
     }
 

@@ -3,14 +3,16 @@
 using namespace cll;
 
 thread_local std::condition_variable* TaskWithDelayThread::currentCondVar;
+thread_local bool* TaskWithDelayThread::currentIsStopping;
 thread_local std::unique_lock<std::mutex>* TaskWithDelayThread::currentLock;
 
 void TaskWithDelayThread::doThreadLoop() {
     std::unique_lock<std::mutex> lock(mutex);
     currentCondVar = &cv;
+    currentIsStopping = &stopping;
     currentLock = &lock;
     while (hasPendingTask) {
-        if (!runImmediately)
+        if (!runImmediately && !stopping)
             cv.wait_for(lock, delay);
         hasPendingTask = false;
         runImmediately = false;
@@ -20,6 +22,7 @@ void TaskWithDelayThread::doThreadLoop() {
     }
     running = false;
     currentCondVar = nullptr;
+    currentIsStopping = nullptr;
     currentLock = nullptr;
 }
 
