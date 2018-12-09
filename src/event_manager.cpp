@@ -38,6 +38,11 @@ EventManager::EventManager(std::string const& iKey, std::string const& batchesDi
     updateConfigIfNeeded();
 }
 
+EventManager::~EventManager() {
+    mainUploadTask->terminate();
+    realtimeUploadTask->terminate();
+}
+
 void EventManager::start() {
     mainUploadTask->requestRun(true);
 }

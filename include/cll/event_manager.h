@@ -42,6 +42,8 @@ public:
      */
     EventManager(std::string const& iKey, std::string const& batchesDir, std::string const& cacheDir);
 
+    ~EventManager();
+
     /**
      * Gets the currently used instrumentation key, as passed in the constructor
      * @return the instrumentation key

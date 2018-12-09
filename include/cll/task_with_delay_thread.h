@@ -29,6 +29,11 @@ private:
     void doThreadLoop();
 
 public:
+    /**
+     * Sleeps for the specified amount of time. This function may return before the requested time if the thread is
+     * stopping.
+     * @param time the time to sleep for
+     */
     template <typename T>
     static void sleep(T time) {
         currentLock->lock();
@@ -45,12 +50,26 @@ public:
 
     ~TaskWithDelayThread();
 
+    /**
+     * Checks whether either the terminate() function or the destructor has been called.
+     * @return whether the thread is stopping
+     */
     bool isStopping() const {
         std::lock_guard<std::mutex> lock(mutex);
         return stopping;
     }
 
+    /**
+     * Request a run of the provided function
+     * @param immediate whether the run should skip the provided delay
+     */
     void requestRun(bool immediate = false);
+
+    /**
+     * Stops the thread in a safe but non-reversible way. The function blocks until the thread is stopped.
+     * No more runs should be requested after this function is called.
+     */
+    void terminate();
 
 };
 

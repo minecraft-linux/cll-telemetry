@@ -27,6 +27,10 @@ void TaskWithDelayThread::doThreadLoop() {
 }
 
 TaskWithDelayThread::~TaskWithDelayThread() {
+    terminate();
+}
+
+void TaskWithDelayThread::terminate() {
     std::unique_lock<std::mutex> lock(mutex);
     runImmediately = true;
     stopping = true;
