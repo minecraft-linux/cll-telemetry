@@ -7,11 +7,20 @@
 
 using namespace cll::http;
 
+std::function<void (CURL* curl)> CurlHttpRequest::platformCurlInitHook;
+
+void CurlHttpRequest::setPlatformCurlInitHook(std::function<void(CURL *curl)> func) {
+    platformCurlInitHook = func;
+}
+
 CurlHttpRequest::CurlHttpRequest() {
     curl = curl_easy_init();
 
     curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, 5L);
     curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 64L);
+
+    if (platformCurlInitHook)
+        platformCurlInitHook(curl);
 }
 
 CurlHttpRequest::~CurlHttpRequest() {
