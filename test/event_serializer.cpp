@@ -16,7 +16,8 @@ TEST(EventSerializerTest, BasicTest) {
                      {}, Event::Time(std::chrono::seconds(1528389000)));
 
     nlohmann::json json = serializer.createEnvelopeFor(testEvent);
-    ASSERT_EQ(json.dump(), "{\"appId\":\"my-app\",\"appVer\":\"1.0.0\",\"epoch\":\"12345678\",\"flags\":514,\"iKey\":\"test-ikey\",\"name\":\"Event Name\",\"os\":\"Linux\",\"osVer\":\"1.2.3.4\",\"popSample\":100.0,\"seqNum\":0,\"time\":\"2018-06-07T16:30:00.000Z\",\"ver\":\"2.1.0\"}");
+
+    ASSERT_EQ(json.dump(), "{\"appId\":\"my-app\",\"appVer\":\"1.0.0\",\"data\":{\"some\":\"data\"},\"epoch\":\"12345678\",\"flags\":514,\"iKey\":\"test-ikey\",\"name\":\"Event Name\",\"os\":\"Linux\",\"osVer\":\"1.2.3.4\",\"popSample\":100.0,\"seqNum\":0,\"time\":\"2018-06-07T16:30:00.000Z\",\"ver\":\"2.1\"}");
 }
 
 TEST(EventSerializerTest, UserInfoExtension) {
