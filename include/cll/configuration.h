@@ -41,6 +41,10 @@ public:
 
 class Configuration {
 
+protected:
+    std::chrono::system_clock::time_point downloadMinRetryTime;
+    int downloadAttempt = 0;
+
 public:
     std::string const url;
     bool downloaded = false;

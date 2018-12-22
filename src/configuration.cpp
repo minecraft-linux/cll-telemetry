@@ -36,9 +36,11 @@ bool Configuration::loadFromCache(ConfigurationCache* cache) {
 }
 
 bool Configuration::download(HttpClient& client, ConfigurationCache* cache) {
-    Log::trace("Configuration", "Downloading configuration from: %s", url.c_str());
-
     auto requestStart = std::chrono::system_clock::now();
+    if (requestStart < downloadMinRetryTime)
+        return false;
+
+    Log::trace("Configuration", "Downloading configuration from: %s", url.c_str());
 
     std::unique_ptr<HttpRequest> request (client.createRequest());
     request->setUrl(url);
@@ -49,6 +51,8 @@ bool Configuration::download(HttpClient& client, ConfigurationCache* cache) {
         hasCached = cache->readFromCache(url, cached);
     if (hasCached && std::chrono::system_clock::now() < cached.expires) {
         importCached(cached);
+
+        downloadAttempt = 0; // reset the download counter
         return true;
     }
 
@@ -75,6 +79,8 @@ bool Configuration::download(HttpClient& client, ConfigurationCache* cache) {
         downloaded = true;
         if (cache)
             cache->writeConfigToCache(url, cached);
+
+        downloadAttempt = 0; // reset the download counter
         return true;
     } else if (response.status == 304) { // cached
         cached.expires = requestStart + cached.refreshInterval;
@@ -84,6 +90,9 @@ bool Configuration::download(HttpClient& client, ConfigurationCache* cache) {
         return true;
     }
     Log::warn("Configuration", "Failed to download configuration: status code %li", response.status);
+    ++downloadAttempt;
+    // pick a time between <2 seconds, ~5 minutes>
+    downloadMinRetryTime = requestStart + std::chrono::seconds(1 << std::min(downloadAttempt + 1, 8));
     return false;
 }
 
