@@ -1,5 +1,6 @@
 #include <cll/multi_file_event_batch.h>
 #include <dirent.h>
+#include <sstream>
 
 using namespace cll;
 
