@@ -21,10 +21,10 @@ struct EventUploadStatus {
     std::chrono::seconds retryAfter;
 
     static EventUploadStatus success() {
-        return {State::Success};
+        return {State::Success, std::chrono::seconds(0)};
     }
     static EventUploadStatus error() {
-        return {State::ErrorGeneric};
+        return {State::ErrorGeneric, std::chrono::seconds(0)};
     }
     static EventUploadStatus rateLimit(std::chrono::seconds retryAfter) {
         return {State::ErrorRateLimit, retryAfter};

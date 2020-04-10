@@ -6,7 +6,7 @@
 namespace cll {
 
 class ConfigurationCache;
-class CachedConfiguration;
+struct CachedConfiguration;
 namespace http { class HttpClient; }
 
 template <typename T>
